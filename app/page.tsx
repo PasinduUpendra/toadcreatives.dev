@@ -1,7 +1,11 @@
-export default function Home() {
+// app/page.tsx
+import { Hero } from "@/components/sections/Hero";
+
+export default function HomePage() {
   return (
-    <main className="text-2xl text-white">
-      ToadCreatives.Dev is live
+    <main className="relative flex min-h-screen flex-col">
+      <Hero />
+      {/* Later: other sections like Work, Lab, About, etc. */}
     </main>
   );
 }
