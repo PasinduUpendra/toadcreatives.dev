@@ -1,8 +1,6 @@
-// app/layout.tsx
 import type { Metadata } from "next";
 import "./globals.css";
-import CustomCursor from "@/components/ui/CustomCursor";
-import RightRailNav from "@/components/layout/RightRailNav";
+import TubesCursor from "@/components/visuals/TubesCursor";
 
 export const metadata: Metadata = {
   title: "Toad Creatives – Motion-driven web experiences",
@@ -17,9 +15,13 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="min-h-screen bg-hero-ink text-slate-50 antialiased">
-        <CustomCursor />
-        <RightRailNav />
-        <div className="relative min-h-screen overflow-hidden">{children}</div>
+        {/* Tubes cursor background (CodePen effect) */}
+        <TubesCursor />
+
+        {/* Content above tubes */}
+        <div className="relative z-[1] min-h-screen">
+          {children}
+        </div>
       </body>
     </html>
   );

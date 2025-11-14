@@ -15,10 +15,11 @@ const config: Config = {
       },
       backgroundImage: {
         "hero-ink":
-          "radial-gradient(circle at top, #1a1f16 0, #0b0c0b 40%, #050505 100%)",
+          "radial-gradient(circle at top, #1a1f16 0, #050505 45%, #020202 100%)",
       },
     },
   },
   plugins: [],
 };
+
 export default config;

@@ -1,32 +1,28 @@
-// components/sections/Hero.tsx
 "use client";
 
 import Image from "next/image";
+import { CreativesMotion } from "@/components/visuals/CreativesMotion";
 
-export default function Hero() {
+export function Hero() {
   return (
-    <section
-      id="home"
-      className="relative z-10 flex min-h-screen items-center justify-center px-4 py-10"
-    >
-      <div className="flex flex-col items-center text-center gap-6">
-        {/* Logo with halo */}
-        <div className="relative">
-          <div className="pointer-events-none absolute inset-0 -z-10 rounded-full bg-toad-green/25 blur-3xl" />
-          <Image
-            src="/toad-creatives-logo.png"
-            alt="Toad Creatives logo"
-            width={180}
-            height={180}
-            className="h-auto w-40 sm:w-48"
-            priority
-          />
-        </div>
+    <section className="relative flex min-h-screen items-center justify-center bg-black text-white">
+  <div className="flex w-full max-w-[780px] flex-col items-center gap-3 px-4">
+    <div className="flex w-full max-w-[540px] flex-col items-center gap-3">
+      <Image
+        src="/toad.svg"
+        alt="Toad Creatives logo"
+        width={540}
+        height={270}
+        className="h-auto w-full"
+      />
 
-        <h1 className="text-3xl font-semibold tracking-tight text-slate-50 sm:text-4xl">
-          Hybrid nature × tech motion.
-        </h1>
-      </div>
-    </section>
+      <CreativesMotion className="w-full -mt-10" />
+    </div>
+
+    <p className="mt-2 text-center text-base sm:text-lg">
+      Hybrid nature × tech motion.
+    </p>
+  </div>
+</section>
   );
 }
