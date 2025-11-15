@@ -2,6 +2,10 @@
 
 /* Reset / base */
 
+:root {
+  font-family: var(--font-body);
+}
+
 *,
 *::before,
 *::after {
@@ -14,6 +18,7 @@ body {
   min-height: 100vh;
   background: #050505;
   color: #e5e7eb;
+  font-family: var(--font-body);
 }
 
 /* CREATIVE SVG STYLES (from CodePen, tuned a bit) */

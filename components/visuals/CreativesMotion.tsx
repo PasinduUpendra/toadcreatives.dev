@@ -57,7 +57,7 @@ export function CreativesMotion({ className = "" }: CreativesMotionProps) {
           {
             strokeDashoffset: 0,
             autoRound: false,
-            duration: 5,
+            duration: 3,
             ease: "power3.out",
           },
           index * 0.25 + delay
@@ -71,6 +71,16 @@ export function CreativesMotion({ className = "" }: CreativesMotionProps) {
     );
     nodes.forEach((node) => tween(node));
 
+    // NEW: fill animation – happens after the strokes are drawn
+  tl.to(
+    nodes,
+      {
+        fill: "#ffffff",   // or any color you like
+        duration: .5,
+        ease: "power2.out",
+      },
+      ">-0.6"              // start slightly before the very end for a nice overlap
+    );
     // 5. Cleanup on unmount
     return () => {
       tl.kill();

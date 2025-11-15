@@ -13,6 +13,10 @@ const config: Config = {
         "toad-mint": "#A4E884",
         carbon: "#111212",
       },
+      fontFamily: {
+        display: ["var(--font-display)"],
+        body: ["var(--font-body)"],
+      },
       backgroundImage: {
         "hero-ink":
           "radial-gradient(circle at top, #1a1f16 0, #050505 45%, #020202 100%)",

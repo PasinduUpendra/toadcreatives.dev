@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
-import TubesCursor from "@/components/visuals/TubesCursor";
+import { displayFont, bodyFont } from "./fonts";
 
 export const metadata: Metadata = {
   title: "Toad Creatives – Motion-driven web experiences",
@@ -13,13 +13,12 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html lang="en">
-      <body className="min-h-screen bg-hero-ink text-slate-50 antialiased">
-        {/* Tubes cursor background (CodePen effect) */}
-        <TubesCursor />
-
-        {/* Content above tubes */}
-        <div className="relative z-[1] min-h-screen">
+    <html
+      lang="en"
+      className={`${displayFont.variable} ${bodyFont.variable}`}
+    >
+      <body className={`${bodyFont.className} antialiased`}>
+        <div className="relative z-[1] min-h-screen bg-hero-ink text-slate-50">
           {children}
         </div>
       </body>

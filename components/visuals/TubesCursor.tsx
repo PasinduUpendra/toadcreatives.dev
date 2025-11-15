@@ -2,7 +2,6 @@
 
 import { useEffect, useRef } from "react";
 
-// we’ll hang the app instance on window so we can tweak colors later
 declare global {
   interface Window {
     __tubesCursorApp?: any;
@@ -15,44 +14,48 @@ export default function TubesCursor() {
   useEffect(() => {
     let cleanup = () => {};
 
-    (async () => {
+    const run = async () => {
       const canvas = canvasRef.current;
       if (!canvas) return;
 
-      // --- THIS IS BASICALLY THE CODEPEN IMPORT ---
-      // The webpackIgnore comment tells Next/webpack:
-      // “don’t try to bundle this; let the browser load it at runtime”.
-      // @ts-ignore
-      const mod = await import(
-        /* webpackIgnore: true */
-        "https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js"
-      );
+      try {
+        // Use the browser's native dynamic import via eval,
+        // so Next/Turbopack doesn't try to bundle/resolve it.
+        const importer = (window as any).eval || eval;
+        const mod = await importer(
+          'import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js")'
+        );
 
-      const TubesCursorImpl = (mod as any).default ?? (mod as any);
+        const TubesCursorImpl = (mod as any).default ?? (mod as any);
 
-      const app = TubesCursorImpl(canvas, {
-        tubes: {
-          colors: ["#f967fb", "#53bc28", "#6958d5"],
-          lights: {
-            intensity: 200,
-            colors: ["#83f36e", "#fe8a2e", "#ff008a", "#60aed5"],
+        const app = TubesCursorImpl(canvas, {
+          tubes: {
+            colors: ["#74a443", "#f1f0f1", "#6c9442"],
+            lights: {
+              intensity: 150,
+              colors: ["#64943c", "#f1f0f1", "#72A06B", "#7cb444"],
+            },
           },
-        },
-      });
+        });
 
-      window.__tubesCursorApp = app;
+        window.__tubesCursorApp = app;
 
-      const handleResize = () => {
-        if (app?.resize) app.resize();
-      };
+        const handleResize = () => {
+          if (app?.resize) app.resize();
+        };
 
-      window.addEventListener("resize", handleResize);
+        window.addEventListener("resize", handleResize);
 
-      cleanup = () => {
-        window.removeEventListener("resize", handleResize);
-        if (app?.dispose) app.dispose();
-      };
-    })();
+        cleanup = () => {
+          window.removeEventListener("resize", handleResize);
+          if (app?.dispose) app.dispose();
+        };
+      } catch (err) {
+        console.error("Failed to init TubesCursor", err);
+      }
+    };
+
+    run();
 
     return () => cleanup();
   }, []);
@@ -61,7 +64,7 @@ export default function TubesCursor() {
     <canvas
       ref={canvasRef}
       id="tubes-canvas"
-      className="pointer-events-none fixed inset-0 z-[0]"
+      className="h-full w-full pointer-events-none"
       aria-hidden="true"
     />
   );
