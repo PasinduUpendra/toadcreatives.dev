@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { displayFont, bodyFont } from "./fonts";
+import { TubesSystem } from "@/components/visuals/TubesSystem";
 
 export const metadata: Metadata = {
   title: "Toad Creatives – Motion-driven web experiences",
@@ -18,6 +19,7 @@ export default function RootLayout({
       className={`${displayFont.variable} ${bodyFont.variable}`}
     >
       <body className={`${bodyFont.className} antialiased`}>
+        <TubesSystem />
         <div className="relative z-[1] min-h-screen bg-hero-ink text-slate-50">
           {children}
         </div>

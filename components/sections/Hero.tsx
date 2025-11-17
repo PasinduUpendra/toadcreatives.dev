@@ -1,26 +1,24 @@
 "use client";
 
+import { useEffect } from "react";
 import Image from "next/image";
 import { CreativesMotion } from "@/components/visuals/CreativesMotion";
-import OverlayParallax from "@/components/visuals/OverlayParallax";
-import TubesCursor  from "@/components/visuals/TubesCursor";
 import { displayFont } from "@/app/fonts";
+// import TubesCursor – NO LONGER NEEDED
 
 export function Hero() {
+  useEffect(() => {
+    // Make sure tubes snap into "hero" position when landing at top
+    window.tubesControls?.setMode("hero");
+  }, []);
+
   return (
-    <section 
+    <section
       id="hero"
       className="relative flex min-h-screen items-center justify-center text-white"
     >
-      {/* Tubes background */}
-      <div className="pointer-events-none absolute inset-0 -z-10">
-        <TubesCursor />
-      </div>
+      {/* your overlay grid / hero_overlay.svg / content stay as-is */}
 
-      {/* Tiled overlay pattern (between Tubes + Logo) */}
-      <OverlayParallax />
-
-      {/* Logo + text */}
       <div className="flex w-full max-w-[780px] flex-col items-center gap-3 px-4">
         <div className="flex w-full max-w-[540px] flex-col items-center gap-3">
           <Image

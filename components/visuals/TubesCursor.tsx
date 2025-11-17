@@ -23,7 +23,7 @@ export default function TubesCursor() {
         // so Next/Turbopack doesn't try to bundle/resolve it.
         const importer = (window as any).eval || eval;
         const mod = await importer(
-          'import("https://cdn.jsdelivr.net/npm/threejs-components@0.0.19/build/cursors/tubes1.min.js")'
+          'import("/vendor/tubes1.min.js")'
         );
 
         const TubesCursorImpl = (mod as any).default ?? (mod as any);
