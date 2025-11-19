@@ -1,21 +1,16 @@
 "use client";
 
-import { useEffect } from "react";
 import Image from "next/image";
 import { CreativesMotion } from "@/components/visuals/CreativesMotion";
 import { displayFont } from "@/app/fonts";
 // import TubesCursor – NO LONGER NEEDED
+import React from "react";
 
 export function Hero() {
-  useEffect(() => {
-    // Make sure tubes snap into "hero" position when landing at top
-    window.tubesControls?.setMode("hero");
-  }, []);
-
   return (
     <section
       id="hero"
-      className="relative flex min-h-screen items-center justify-center text-white"
+      className="relative flex min-h-screen items-center justify-center text-white bg-transparent"
     >
       {/* your overlay grid / hero_overlay.svg / content stay as-is */}
 
@@ -37,6 +32,10 @@ export function Hero() {
         >
           Hybrid nature <span className="text-lime-300">×</span> tech motion
         </h1>
+      </div>
+      <div className="text-white text-center">
+        <h1 className="text-5xl font-bold mb-4">ToadCreatives</h1>
+        <p className="text-xl">Creative motion for digital brands</p>
       </div>
     </section>
   );
