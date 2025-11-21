@@ -8,7 +8,9 @@ export type ScrollStep =
   | "what_p1"
   | "what_p2"
   | "what_p3"
-  | "work_intro";
+  | "work_intro"
+  | "contact_intro"
+  ;
 
 export const SCROLL_STEPS: ScrollStep[] = [
   "hero_intro",
@@ -21,6 +23,7 @@ export const SCROLL_STEPS: ScrollStep[] = [
   "what_p2",
   "what_p3",
   "work_intro",
+  "contact_intro",
 ];
 
 export const MIN_SCROLL_STEP_INDEX = 0;

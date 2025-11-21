@@ -144,3 +144,12 @@ body {
     0 0 14px rgba(0, 0, 0, 0.85),
     0 0 18px rgba(255, 255, 255, 0.2);
 }
+/* Hide scrollbars for elements that opt into it */
+.no-scrollbar {
+  -ms-overflow-style: none; /* IE + Edge */
+  scrollbar-width: none; /* Firefox */
+}
+
+.no-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}

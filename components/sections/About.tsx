@@ -2,7 +2,7 @@
 "use client";
 
 import React, { useMemo } from "react";
-import { AnimatePresence, motion } from "framer-motion";
+import { AnimatePresence, motion, type Variants } from "framer-motion";
 import { useScrollSteps } from "../system/ScrollProgressProvider";
 import type { ScrollStep } from "../system/scrollTimeline";
 import { displayFont } from "@/app/fonts";
@@ -32,6 +32,25 @@ const paragraphs = [
   },
 ];
 
+const sectionVariants: Variants = {
+  hidden: { opacity: 0, y: 90, scale: 0.9 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: {
+      duration: 0.7,
+      ease: [0.19, 1, 0.22, 1],
+    },
+  },
+  exit: {
+    opacity: 0,
+    y: -70,
+    scale: 1.02,
+    transition: { duration: 0.55, ease: [0.19, 1, 0.22, 1] },
+  },
+};
+
 const About: React.FC = () => {
   const { step } = useScrollSteps();
 
@@ -51,13 +70,13 @@ const About: React.FC = () => {
         <motion.section
           key="about-section"
           className="fixed inset-0 flex items-center justify-center px-6 md:px-12 lg:px-20 pointer-events-none"
-          initial={{ opacity: 0, y: 80, scale: 0.96 }}
-          animate={{ opacity: 1, y: 0, scale: 1 }}
-          exit={{ opacity: 0, y: 40, scale: 0.94 }}
-          transition={{ duration: 0.7, ease: [0.16, 1, 0.3, 1] }}
+          variants={sectionVariants}
+          initial="hidden"
+          animate="visible"
+          exit="exit"
         >
           <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-[minmax(0,0.9fr)_minmax(0,1.2fr)] gap-12 md:gap-16 items-center">
-            {/* Left column – heading */}
+            {/* Left column – kinetic heading */}
             <div className="pointer-events-none">
               <motion.div
                 className="inline-flex flex-col gap-4"
@@ -73,11 +92,11 @@ const About: React.FC = () => {
                       <motion.span
                         key={`about-char-${index}-${char}`}
                         className="inline-block"
-                        initial={{ y: "115%", opacity: 0, rotate: 8 }}
-                        animate={{ y: "0%", opacity: 1, rotate: 0 }}
+                        initial={{ y: "120%", opacity: 0 }}
+                        animate={{ y: "0%", opacity: 1 }}
                         transition={{
-                          duration: 0.55,
-                          delay: 0.035 * index,
+                          duration: 0.45,
+                          delay: 0.03 * index,
                           ease: [0.19, 1, 0.22, 1],
                         }}
                       >
@@ -87,15 +106,26 @@ const About: React.FC = () => {
                   </span>
                   <motion.span
                     className="inline-block overflow-hidden align-top ml-2"
-                    initial={{ y: "115%", opacity: 0 }}
+                    initial={{ y: "120%", opacity: 0 }}
                     animate={{ y: "0%", opacity: 1 }}
                     transition={{
-                      duration: 0.5,
+                      duration: 0.45,
                       delay: 0.26,
                       ease: [0.19, 1, 0.22, 1],
                     }}
                   >
-                    <span className="inline-block">us</span>
+                    <motion.span
+                      className="inline-block"
+                      initial={{ scale: 0.9 }}
+                      animate={{ scale: [0.9, 1.05, 1] }}
+                      transition={{
+                        duration: 0.4,
+                        delay: 0.26,
+                        ease: [0.19, 1, 0.22, 1],
+                      }}
+                    >
+                      us
+                    </motion.span>
                   </motion.span>
                 </motion.h2>
 
@@ -104,49 +134,50 @@ const About: React.FC = () => {
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{
-                    duration: 0.65,
-                    delay: 0.45,
+                    duration: 0.55,
+                    delay: 0.38,
                     ease: [0.16, 1, 0.3, 1],
                   }}
                 />
 
                 <motion.p
                   className="text-sm md:text-base text-neutral-300 max-w-md text-glow-soft"
-                  initial={{ opacity: 0, y: 12 }}
+                  initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{
-                    duration: 0.6,
-                    delay: 0.5,
+                    duration: 0.55,
+                    delay: 0.44,
                     ease: [0.19, 1, 0.22, 1],
                   }}
                 >
-                  The studio layer: who’s behind the tubes, what drives the experiments, and why everything moves the way it does.
+                  The studio layer: who’s behind the tubes, what drives the
+                  experiments, and why everything moves the way it does.
                 </motion.p>
               </motion.div>
             </div>
 
-            {/* Right column – paragraphs, only after intro */}
+            {/* Right column – paragraph slides */}
             <div className="pointer-events-auto">
               <AnimatePresence mode="wait">
                 {!isIntroOnly && activeParagraph && (
                   <motion.div
                     key={activeParagraph.id}
                     className="relative"
-                    initial={{ opacity: 0, y: 30 }}
+                    initial={{ opacity: 0, y: 40 }}
                     animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -26 }}
+                    exit={{ opacity: 0, y: -32 }}
                     transition={{
-                      duration: 0.6,
+                      duration: 0.55,
                       ease: [0.19, 1, 0.22, 1],
                     }}
                   >
                     <motion.p
                       className="text-[0.7rem] uppercase tracking-[0.28em] text-neutral-400 mb-4 text-glow-soft"
-                      initial={{ opacity: 0, x: 20 }}
+                      initial={{ opacity: 0, x: 24 }}
                       animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -20 }}
+                      exit={{ opacity: 0, x: -24 }}
                       transition={{
-                        duration: 0.45,
+                        duration: 0.4,
                         ease: [0.19, 1, 0.22, 1],
                       }}
                     >
@@ -167,9 +198,6 @@ const About: React.FC = () => {
 
 export default About;
 
-/**
- * Word-level staggered text reveal with a subtle “slide + blur” feel.
- */
 const WordStaggerText: React.FC<{ text: string }> = ({ text }) => {
   const words = text.split(" ");
 
@@ -183,7 +211,7 @@ const WordStaggerText: React.FC<{ text: string }> = ({ text }) => {
           animate={{ y: "0%", opacity: 1, filter: "blur(0px)" }}
           exit={{ y: "-115%", opacity: 0, filter: "blur(4px)" }}
           transition={{
-            duration: 0.5,
+            duration: 0.45,
             delay: 0.03 * index,
             ease: [0.19, 1, 0.22, 1],
           }}

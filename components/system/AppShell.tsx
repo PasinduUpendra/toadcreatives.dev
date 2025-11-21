@@ -9,6 +9,7 @@ import About from "../sections/About";
 import WhatWeDo from "../sections/WhatWeDo";
 import Works from "../sections/Works";
 import DebugSteps from "./DebugSteps"; // <-- ADD THIS
+import Contact from "../sections/Contact";
 
 const AppShell: React.FC = () => {
   return (
@@ -25,6 +26,7 @@ const AppShell: React.FC = () => {
           <About />
           <WhatWeDo />
           <Works />
+          <Contact />
           <DebugSteps /> {/* debug overlay */}
         </div>
       </div>
