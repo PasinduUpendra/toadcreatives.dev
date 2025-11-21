@@ -1,3 +1,4 @@
+// FILE: components/visuals/TubesCursor.tsx
 "use client";
 
 import { useEffect, useRef } from "react";
@@ -8,8 +9,30 @@ declare global {
   }
 }
 
-export default function TubesCursor() {
+export type TubesLightsConfig = {
+  intensity: number;
+  colors: string[];
+};
+
+export type TubesConfig = {
+  tubes: {
+    colors: string[];
+    lights: TubesLightsConfig;
+  };
+};
+
+type Props = {
+  config: TubesConfig;
+};
+
+export default function TubesCursor({ config }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const configRef = useRef<TubesConfig>(config);
+
+  // Keep latest config in a ref if we want to use it in the future
+  useEffect(() => {
+    configRef.current = config;
+  }, [config]);
 
   useEffect(() => {
     let cleanup = () => {};
@@ -19,25 +42,17 @@ export default function TubesCursor() {
       if (!canvas) return;
 
       try {
-        // Use the browser's native dynamic import via eval,
-        // so Next/Turbopack doesn't try to bundle/resolve it.
         const importer = (window as any).eval || eval;
-        const mod = await importer(
-          'import("/vendor/tubes1.min.js")'
-        );
-
+        const mod = await importer('import("/vendor/tubes1.min.js")');
         const TubesCursorImpl = (mod as any).default ?? (mod as any);
 
-        const app = TubesCursorImpl(canvas, {
-          tubes: {
-            colors: ["#74a443", "#f1f0f1", "#6c9442"],
-            lights: {
-              intensity: 150,
-              colors: ["#64943c", "#f1f0f1", "#72A06B", "#7cb444"],
-            },
-          },
-        });
+        // Just in case there was an old instance from an HMR refresh
+        if (window.__tubesCursorApp?.dispose) {
+          window.__tubesCursorApp.dispose();
+        }
 
+        // Use the initial config once
+        const app = TubesCursorImpl(canvas, configRef.current);
         window.__tubesCursorApp = app;
 
         const handleResize = () => {
@@ -57,8 +72,9 @@ export default function TubesCursor() {
 
     run();
 
+    // Run only once on mount / unmount
     return () => cleanup();
-  }, []);
+  }, []); // <-- no config in deps, prevents re-init on scroll
 
   return (
     <canvas

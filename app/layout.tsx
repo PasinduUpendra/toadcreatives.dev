@@ -1,11 +1,11 @@
-import type { Metadata } from "next";
-import "./globals.css";
-import { displayFont, bodyFont } from "./fonts";
-import { AppShell } from "@/components/system/AppShell";
+// FILE: app/layout.tsx
+import type { Metadata } from 'next';
+import './globals.css';
+import { bodyFont } from './fonts';
 
 export const metadata: Metadata = {
-  title: "Toad Creatives – Motion-driven web experiences",
-  description: "Toad Creatives – hybrid nature x tech web experiences.",
+  title: 'Toad Creatives',
+  description: 'Hybrid nature × tech motion',
 };
 
 export default function RootLayout({
@@ -14,12 +14,9 @@ export default function RootLayout({
   children: React.ReactNode;
 }) {
   return (
-    <html
-      lang="en"
-      className={`${displayFont.variable} ${bodyFont.variable}`}
-    >
+    <html lang="en">
       <body className={`${bodyFont.className} antialiased`}>
-        <AppShell>{children}</AppShell>
+        {children}
       </body>
     </html>
   );
