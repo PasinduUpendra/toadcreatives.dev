@@ -3,13 +3,13 @@
 
 import React, { useMemo } from "react";
 import { useTubesScrollState } from "../system/useTubesScrollState";
-import TubesCursor, { TubesConfig } from "./TubesCursor";
+import TubesCursor from "./TubesCursor";
 
 export const TubesSystem: React.FC = () => {
   const { mode } = useTubesScrollState();
 
   // Initialise tubes once with your hero palette
-  const baseConfig: TubesConfig = useMemo(
+  const baseConfig = useMemo(
     () => ({
       tubes: {
         colors: ["#74a443", "#f1f0f1", "#6c9442"],
