@@ -69,6 +69,7 @@ const About: React.FC = () => {
       {isActiveSection && (
         <motion.section
           key="about-section"
+          data-section="about"
           className="fixed inset-0 flex items-center justify-center px-6 md:px-12 lg:px-20 pointer-events-none"
           variants={sectionVariants}
           initial="hidden"
@@ -130,7 +131,7 @@ const About: React.FC = () => {
                 </motion.h2>
 
                 <motion.div
-                  className="h-[2px] bg-gradient-to-r from-lime-400/0 via-lime-300 to-lime-400/0 rounded-full origin-left"
+                  className="h-[2px] w-40 bg-gradient-to-r from-lime-400/0 via-lime-300 to-lime-400/0 rounded-full origin-left"
                   initial={{ scaleX: 0 }}
                   animate={{ scaleX: 1 }}
                   transition={{

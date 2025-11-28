@@ -69,6 +69,7 @@ const WhatWeDo: React.FC = () => {
       {isActiveSection && (
         <motion.section
           key="what-section"
+          data-section="what"
           className="fixed inset-0 flex items-center justify-center px-6 md:px-12 lg:px-20 pointer-events-none"
           variants={sectionVariants}
           initial="hidden"

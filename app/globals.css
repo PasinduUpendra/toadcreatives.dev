@@ -11,7 +11,9 @@
 *::after {
   box-sizing: border-box;
 }
-
+html, body {
+  cursor: none;
+}
 /* Just enough to see the animation clearly */
 body {
   margin: 0;
@@ -129,9 +131,9 @@ body {
 
 .text-glow-strong {
   text-shadow:
-    0 0 26px rgba(0, 0, 0, 0.95),
-    0 0 32px rgba(183, 244, 101, 0.70);
-}
+    0 0 15px rgba(0, 0, 0, 0.2 )
+    0 0 25px rgba(0, 0, 0, 0.5);
+  }
 
 .text-glow-medium {
   text-shadow:
@@ -152,4 +154,26 @@ body {
 
 .no-scrollbar::-webkit-scrollbar {
   display: none; /* Chrome, Safari, Opera */
+}
+/* Custom scrollbar for dark panels */
+.scrollbar-contrast {
+  scrollbar-width: thin;              /* Firefox */
+  scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
+}
+
+.scrollbar-contrast::-webkit-scrollbar {
+  width: 6px;
+}
+
+.scrollbar-contrast::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.scrollbar-contrast::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.675);
+  border-radius: 999px;
+}
+
+.scrollbar-contrast::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.55);
 }

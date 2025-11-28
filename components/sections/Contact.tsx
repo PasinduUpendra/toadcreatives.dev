@@ -36,6 +36,7 @@ const Contact: React.FC = () => {
       {isActive && (
         <motion.section
           key="contact-section"
+          data-section="contact"
           className="fixed inset-0 flex items-center justify-center px-6 md:px-10 lg:px-16 pointer-events-none"
           variants={sectionVariants}
           initial="hidden"

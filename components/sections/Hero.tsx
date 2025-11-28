@@ -19,6 +19,7 @@ const Hero: React.FC = () => {
       {isVisible && (
         <motion.section
           key="hero"
+          data-section="hero"
           className="fixed inset-0 flex items-center justify-center pointer-events-none"
           initial={{ opacity: 0, y: 40, scale: 0.96 }}
           animate={{ opacity: 1, y: 0, scale: 1 }}

@@ -1,148 +1,156 @@
-// FILE: components/system/ScrollProgressProvider.tsx
 "use client";
 
 import React, {
   createContext,
-  useCallback,
   useContext,
   useEffect,
   useRef,
   useState,
+  type ReactNode,
 } from "react";
 import {
   SCROLL_STEPS,
   MIN_SCROLL_STEP_INDEX,
   MAX_SCROLL_STEP_INDEX,
-  ScrollStep,
+  type ScrollStep,
 } from "./scrollTimeline";
 
-type ScrollDirection = "up" | "down" | "none";
+type Direction = "up" | "down" | "none";
 
-type ScrollContextValue = {
-  stepIndex: number;
+interface ScrollContextValue {
   step: ScrollStep;
-  direction: ScrollDirection;
-  goToStep: (index: number) => void;
-  goNext: () => void;
-  goPrev: () => void;
+  index: number;
+  direction: Direction;
+  goToIndex: (index: number) => void;
+}
+
+const ScrollContext = createContext<ScrollContextValue | undefined>(undefined);
+
+interface ProviderProps {
+  children: ReactNode;
+}
+
+const clampIndex = (value: number): number => {
+  if (value < MIN_SCROLL_STEP_INDEX) return MIN_SCROLL_STEP_INDEX;
+  if (value > MAX_SCROLL_STEP_INDEX) return MAX_SCROLL_STEP_INDEX;
+  return value;
 };
 
-const ScrollContext = createContext<ScrollContextValue | null>(null);
-
-// How much wheel delta we require before advancing a step
-const SCROLL_THRESHOLD = 120; // tweak: higher = needs more scroll
-const TOUCH_THRESHOLD = 40;   // px finger travel for a step
-// How long we "lock" the stepper while section animations play
-const STEP_COOLDOWN_MS = 650;
-
-export const ScrollProgressProvider: React.FC<{ children: React.ReactNode }> = ({
+export const ScrollProgressProvider: React.FC<ProviderProps> = ({
   children,
 }) => {
-  const [stepIndex, setStepIndex] = useState<number>(0);
-  const [direction, setDirection] = useState<ScrollDirection>("none");
+  const [index, setIndex] = useState<number>(0);
+  const [direction, setDirection] = useState<Direction>("none");
 
-  const isLockedRef = useRef(false);
-  const wheelAccumRef = useRef(0);
-  const touchStartYRef = useRef(0);
+  const indexRef = useRef<number>(0);
 
-  const goToStep = useCallback((index: number) => {
-    setStepIndex((prev) => {
-      const clamped = Math.min(
-        MAX_SCROLL_STEP_INDEX,
-        Math.max(MIN_SCROLL_STEP_INDEX, index)
-      );
-      if (clamped > prev) setDirection("down");
-      else if (clamped < prev) setDirection("up");
-      else setDirection("none");
-      return clamped;
-    });
-  }, []);
+  // Hard step lock: while true, wheel cannot change the step.
+  const isSteppingRef = useRef<boolean>(false);
+  const stepTimeoutRef = useRef<number | null>(null);
 
-  const goNext = useCallback(() => {
-    goToStep(stepIndex + 1);
-  }, [goToStep, stepIndex]);
+  const DEADZONE = 5;       // ignore tiny jitter
+  const STEP_DELAY = 600;   // ms between allowed steps – tune to taste
 
-  const goPrev = useCallback(() => {
-    goToStep(stepIndex - 1);
-  }, [goToStep, stepIndex]);
+  const updateIndex = (next: number) => {
+    const clamped = clampIndex(next);
+    indexRef.current = clamped;
+    setIndex(clamped);
+  };
 
-  const lockStepper = useCallback(() => {
-    isLockedRef.current = true;
-    window.setTimeout(() => {
-      isLockedRef.current = false;
-      wheelAccumRef.current = 0;
-    }, STEP_COOLDOWN_MS);
-  }, []);
+  const unlockStep = () => {
+    isSteppingRef.current = false;
+    if (stepTimeoutRef.current !== null) {
+      window.clearTimeout(stepTimeoutRef.current);
+      stepTimeoutRef.current = null;
+    }
+  };
 
-  // Always start at hero_intro on mount (even after Fast Refresh)
   useEffect(() => {
-    goToStep(0);
-  }, [goToStep]);
+    if (typeof window === "undefined") return;
 
-  // Wheel + touch handlers (stepper behaviour)
-  useEffect(() => {
     const handleWheel = (event: WheelEvent) => {
-      // We fully own scrolling on this page
+      const deltaY = event.deltaY;
+      if (Math.abs(deltaY) < DEADZONE) return;
+
+      // We fully own scroll.
       event.preventDefault();
 
-      if (isLockedRef.current) return;
-
-      wheelAccumRef.current += event.deltaY;
-
-      if (wheelAccumRef.current > SCROLL_THRESHOLD) {
-        goNext();
-        lockStepper();
-      } else if (wheelAccumRef.current < -SCROLL_THRESHOLD) {
-        goPrev();
-        lockStepper();
+      // If a step is currently animating / locked, ignore everything.
+      if (isSteppingRef.current) {
+        return;
       }
-    };
 
-    const handleTouchStart = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      if (!touch) return;
-      touchStartYRef.current = touch.clientY;
-    };
+      const dir: Direction = deltaY > 0 ? "down" : "up";
+      const current = indexRef.current;
+      const next = clampIndex(current + (dir === "down" ? 1 : -1));
 
-    const handleTouchEnd = (event: TouchEvent) => {
-      if (isLockedRef.current) return;
+      // At bounds → nothing to do; don’t change direction (prevents hero flicker).
+      if (next === current) return;
 
-      const touch = event.changedTouches[0];
-      if (!touch) return;
+      // Commit single step.
+      isSteppingRef.current = true;
+      setDirection(dir);
+      updateIndex(next);
 
-      const delta = touchStartYRef.current - touch.clientY;
-      if (Math.abs(delta) < TOUCH_THRESHOLD) return;
+      // Keep real page scroll pinned.
+      window.scrollTo({ top: 0, left: 0 });
 
-      if (delta > 0) {
-        goNext();
-      } else {
-        goPrev();
+      // Unlock after STEP_DELAY so another wheel can trigger next step.
+      if (stepTimeoutRef.current !== null) {
+        window.clearTimeout(stepTimeoutRef.current);
       }
-      lockStepper();
+      stepTimeoutRef.current = window.setTimeout(unlockStep, STEP_DELAY);
     };
 
     window.addEventListener("wheel", handleWheel, { passive: false });
-    window.addEventListener("touchstart", handleTouchStart, { passive: true });
-    window.addEventListener("touchend", handleTouchEnd, { passive: true });
 
-    const originalOverflow = document.body.style.overflow;
+    // Disable native scroll globally.
+    const prevHtmlOverflow = document.documentElement.style.overflow;
+    const prevBodyOverflow = document.body.style.overflow;
+    document.documentElement.style.overflow = "hidden";
     document.body.style.overflow = "hidden";
 
     return () => {
       window.removeEventListener("wheel", handleWheel);
-      window.removeEventListener("touchstart", handleTouchStart);
-      window.removeEventListener("touchend", handleTouchEnd);
-      document.body.style.overflow = originalOverflow;
+      document.documentElement.style.overflow = prevHtmlOverflow;
+      document.body.style.overflow = prevBodyOverflow;
+      unlockStep();
     };
-  }, [goNext, goPrev, lockStepper]);
+  }, []);
+
+  const goToIndex = (target: number) => {
+    const clamped = clampIndex(target);
+    const prev = indexRef.current;
+
+    if (clamped === prev) {
+      setDirection("none");
+      return;
+    }
+
+    const dir: Direction = clamped > prev ? "down" : "up";
+
+    // Lock briefly so nav jump isn’t immediately overridden by wheel momentum.
+    isSteppingRef.current = true;
+    if (stepTimeoutRef.current !== null) {
+      window.clearTimeout(stepTimeoutRef.current);
+    }
+    stepTimeoutRef.current = window.setTimeout(unlockStep, STEP_DELAY);
+
+    setDirection(dir);
+    updateIndex(clamped);
+
+    if (typeof window !== "undefined") {
+      window.scrollTo({ top: 0, left: 0 });
+    }
+  };
+
+  const step: ScrollStep = SCROLL_STEPS[index];
 
   const value: ScrollContextValue = {
-    stepIndex,
-    step: SCROLL_STEPS[stepIndex],
+    step,
+    index,
     direction,
-    goToStep,
-    goNext,
-    goPrev,
+    goToIndex,
   };
 
   return (

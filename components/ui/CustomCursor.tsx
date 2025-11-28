@@ -1,77 +1,183 @@
-// components/ui/CustomCursor.tsx
+// FILE: components/ui/CustomCursor.tsx
 "use client";
 
+import React, { useEffect, useState } from "react";
 import { motion, useMotionValue, useSpring } from "framer-motion";
-import { useEffect, useState } from "react";
 
-type Variant = "default" | "link";
+type CursorVariant = "default" | "magnet" | "press";
 
-export default function CustomCursor() {
-  const [isMounted, setIsMounted] = useState(false);
-  const [variant, setVariant] = useState<Variant>("default");
+const CustomCursor: React.FC = () => {
+  const [visible, setVisible] = useState(false);
+  const [variant, setVariant] = useState<CursorVariant>("default");
+  const [isPointerDevice, setIsPointerDevice] = useState(false);
 
-  const cursorX = useMotionValue(0);
-  const cursorY = useMotionValue(0);
+  const x = useMotionValue(-100);
+  const y = useMotionValue(-100);
 
-  // spring gives us that “laggy trail” feeling
-  const smoothX = useSpring(cursorX, { stiffness: 200, damping: 25, mass: 0.4 });
-  const smoothY = useSpring(cursorY, { stiffness: 200, damping: 25, mass: 0.4 });
+  // Smooth follower
+  const fx = useSpring(x, { stiffness: 220, damping: 22, mass: 0.6 });
+  const fy = useSpring(y, { stiffness: 220, damping: 22, mass: 0.6 });
+
+  // Enable only on non-touch devices
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const hasTouch =
+      "ontouchstart" in window || navigator.maxTouchPoints > 0;
+    if (!hasTouch) setIsPointerDevice(true);
+  }, []);
 
   useEffect(() => {
-    setIsMounted(true);
+    if (!isPointerDevice) return;
+    if (typeof window === "undefined") return;
 
-    const move = (e: MouseEvent) => {
-      cursorX.set(e.clientX);
-      cursorY.set(e.clientY);
+    const handleMove = (e: MouseEvent) => {
+      x.set(e.clientX);
+      y.set(e.clientY);
+      if (!visible) setVisible(true);
+    };
+
+    const handleLeave = () => {
+      setVisible(false);
+    };
+
+    const handleDown = () => {
+      setVariant((current) => (current === "magnet" ? "magnet" : "press"));
+    };
+
+    const handleUp = () => {
+      setVariant((current) => (current === "press" ? "default" : current));
     };
 
     const handleOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement | null;
-      const isInteractive = target?.closest(
-        "a, button, [data-cursor='link']"
-      );
-      setVariant(isInteractive ? "link" : "default");
+      const magnetEl = target?.closest("[data-cursor='magnet']");
+      if (magnetEl) {
+        setVariant((current) =>
+          current === "press" ? "press" : "magnet"
+        );
+      } else {
+        setVariant((current) =>
+          current === "press" ? "press" : "default"
+        );
+      }
     };
 
-    window.addEventListener("mousemove", move);
-    window.addEventListener("mouseover", handleOver);
+    window.addEventListener("mousemove", handleMove);
+    window.addEventListener("mouseleave", handleLeave);
+    window.addEventListener("mousedown", handleDown);
+    window.addEventListener("mouseup", handleUp);
+    document.addEventListener("mouseover", handleOver);
 
     return () => {
-      window.removeEventListener("mousemove", move);
-      window.removeEventListener("mouseover", handleOver);
+      window.removeEventListener("mousemove", handleMove);
+      window.removeEventListener("mouseleave", handleLeave);
+      window.removeEventListener("mousedown", handleDown);
+      window.removeEventListener("mouseup", handleUp);
+      document.removeEventListener("mouseover", handleOver);
     };
-  }, [cursorX, cursorY]);
+  }, [isPointerDevice, visible, x, y]);
 
-  if (!isMounted) return null;
+  if (!isPointerDevice) return null;
 
-  const size = variant === "link" ? 90 : 60;
+  // Cursor styling per variant
+  const outerStyles = (() => {
+    switch (variant) {
+      case "magnet":
+        return {
+          size: 44,
+          border: "rgba(180, 255, 140, 0.9)",
+          glow: "0 0 40px rgba(183, 244, 101, 0.45)",
+          opacity: 0.95,
+        };
+      case "press":
+        return {
+          size: 26,
+          border: "rgba(200, 255, 200, 0.9)",
+          glow: "0 0 30px rgba(183, 244, 101, 0.6)",
+          opacity: 1,
+        };
+      default:
+        return {
+          size: 30,
+          border: "rgba(183, 244, 101, 0.65)",
+          glow: "0 0 30px rgba(183, 244, 101, 0.35)",
+          opacity: 0.85,
+        };
+    }
+  })();
+
+  const innerStyles = (() => {
+    switch (variant) {
+      case "magnet":
+        return {
+          size: 6,
+          opacity: 0.35,
+        };
+      case "press":
+        return {
+          size: 6,
+          opacity: 0.0,
+        };
+      default:
+        return {
+          size: 8,
+          opacity: 0.5,
+        };
+    }
+  })();
 
   return (
-    <motion.div
-      className="pointer-events-none fixed left-0 top-0 z-[70] hidden md:block"
-      style={{
-        x: smoothX,
-        y: smoothY,
-        translateX: -size / 2,
-        translateY: -size / 2,
-      }}
-    >
-      {/* single blurred green shade */}
+    <>
+      {/* Outer ring / glow */}
       <motion.div
-        className="rounded-full"
-        animate={{
-          width: size,
-          height: size,
-          background:
-            "radial-gradient(circle, rgba(164,232,132,0.7) 0%, rgba(123,174,68,0.35) 35%, rgba(5,5,5,0) 70%)",
-          boxShadow:
-            variant === "link"
-              ? "0 0 45px rgba(123,174,68,0.9)"
-              : "0 0 30px rgba(123,174,68,0.65)",
-          scale: variant === "link" ? 1.1 : 1,
+        className="pointer-events-none fixed z-[9998] hidden md:block mix-blend-screen"
+        style={{
+          x: fx,
+          y: fy,
+          translateX: "-50%",
+          translateY: "-50%",
         }}
-        transition={{ type: "spring", stiffness: 260, damping: 24 }}
+        animate={{
+          width: outerStyles.size,
+          height: outerStyles.size,
+          borderRadius: outerStyles.size,
+          borderWidth: 1,
+          borderColor: outerStyles.border,
+          boxShadow: outerStyles.glow,
+          opacity: visible ? outerStyles.opacity : 0,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 260,
+          damping: 22,
+          mass: 0.8,
+        }}
       />
-    </motion.div>
+
+      {/* Inner core */}
+      <motion.div
+        className="pointer-events-none fixed z-[9999] hidden md:block mix-blend-screen bg-lime-300"
+        style={{
+          x,
+          y,
+          translateX: "-50%",
+          translateY: "-50%",
+        }}
+        animate={{
+          width: innerStyles.size,
+          height: innerStyles.size,
+          borderRadius: innerStyles.size,
+          opacity: visible ? innerStyles.opacity : 0,
+        }}
+        transition={{
+          type: "spring",
+          stiffness: 320,
+          damping: 25,
+          mass: 0.6,
+        }}
+      />
+    </>
   );
-}
+};
+
+export default CustomCursor;
