@@ -165,3 +165,7 @@ export const useScrollSteps = (): ScrollContextValue => {
   }
   return ctx;
 };
+export const useScrollProgress = (): ScrollStep => {
+  const { step } = useScrollSteps();
+  return step;
+};
