@@ -31,6 +31,45 @@ const Contact: React.FC = () => {
   const { step } = useScrollSteps();
   const isActive = step === "contact_intro"; // only show at final step
 
+  const [status, setStatus] = React.useState<
+    "idle" | "loading" | "success" | "error"
+  >("idle");
+  const [errorMsg, setErrorMsg] = React.useState("");
+
+  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+    e.preventDefault();
+    setStatus("loading");
+    setErrorMsg("");
+
+    const formData = new FormData(e.currentTarget);
+
+    const payload = {
+      name: formData.get("name"),
+      email: formData.get("email"),
+      projectType: formData.get("projectType"),
+      message: formData.get("message"),
+    };
+
+    try {
+      const res = await fetch("/api/contact", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
+
+      if (!res.ok) {
+        throw new Error("Request failed");
+      }
+
+      setStatus("success");
+      e.currentTarget.reset();
+    } catch (err) {
+      console.error(err);
+      setStatus("error");
+      setErrorMsg("Something went wrong. Please try again or email me directly.");
+    }
+  }
+
   return (
     <AnimatePresence>
       {isActive && (
@@ -44,7 +83,6 @@ const Contact: React.FC = () => {
           exit="exit"
         >
           <motion.div className="max-w-6xl w-full mx-auto pointer-events-auto grid gap-12 md:grid-cols-[minmax(0,1.1fr)_minmax(0,1.1fr)] items-center">
-            
             {/* LEFT SIDE — Title + Text */}
             <motion.div
               className="space-y-8"
@@ -92,8 +130,7 @@ const Contact: React.FC = () => {
                 delay: 0.08,
               }}
             >
-              <form className="space-y-4">
-                
+              <form onSubmit={handleSubmit} className="space-y-4">
                 {/* NAME + EMAIL */}
                 <div className="grid md:grid-cols-2 gap-4">
                   <div className="flex flex-col gap-1">
@@ -108,6 +145,7 @@ const Contact: React.FC = () => {
                       name="name"
                       type="text"
                       autoComplete="name"
+                      required
                       className="rounded-2xl bg-neutral-900/70 border border-neutral-700/80 px-3.5 py-2.5 text-sm text-neutral-50 outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300/80 transition"
                     />
                   </div>
@@ -124,6 +162,7 @@ const Contact: React.FC = () => {
                       name="email"
                       type="email"
                       autoComplete="email"
+                      required
                       className="rounded-2xl bg-neutral-900/70 border border-neutral-700/80 px-3.5 py-2.5 text-sm text-neutral-50 outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300/80 transition"
                     />
                   </div>
@@ -157,22 +196,39 @@ const Contact: React.FC = () => {
                     id="message"
                     name="message"
                     rows={4}
+                    required
                     placeholder="What are you building? Timeline, references, features, anything helps."
                     className="rounded-2xl bg-neutral-900/70 border border-neutral-700/80 px-3.5 py-2.5 text-sm text-neutral-50 outline-none focus:border-lime-300 focus:ring-1 focus:ring-lime-300/80 transition resize-none"
                   />
                 </div>
 
                 {/* SUBMIT */}
-                <div className="flex items-center justify-between gap-3 pt-1">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 pt-1">
                   <button
                     type="submit"
-                    className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium bg-lime-300 text-black shadow-[0_16px_40px_rgba(190,242,100,0.35)] hover:shadow-[0_18px_50px_rgba(190,242,100,0.45)] hover:-translate-y-[1px] active:translate-y-0 transition-transform transition-shadow duration-200"
+                    disabled={status === "loading"}
+                    className="inline-flex items-center justify-center rounded-full px-6 py-2.5 text-sm font-medium bg-lime-300 text-black shadow-[0_16px_40px_rgba(190,242,100,0.35)] hover:shadow-[0_18px_50px_rgba(190,242,100,0.45)] hover:-translate-y-[1px] active:translate-y-0 transition-transform transition-shadow duration-200 disabled:opacity-60 disabled:hover:translate-y-0"
                   >
-                    Send message
+                    {status === "loading" ? "Sending…" : "Send message"}
                   </button>
-                  <p className="hidden md:block text-[0.7rem] text-neutral-500">
-                    You’ll hear directly from me.
-                  </p>
+
+                  <div className="space-y-1">
+                    <p className="hidden md:block text-[0.7rem] text-neutral-500">
+                      You’ll hear directly from me.
+                    </p>
+
+                    {status === "success" && (
+                      <p className="text-[0.7rem] text-lime-300">
+                        Message sent — I&apos;ll get back to you soon.
+                      </p>
+                    )}
+
+                    {status === "error" && (
+                      <p className="text-[0.7rem] text-red-400">
+                        {errorMsg}
+                      </p>
+                    )}
+                  </div>
                 </div>
               </form>
             </motion.div>
