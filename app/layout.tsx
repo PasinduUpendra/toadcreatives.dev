@@ -7,6 +7,12 @@ import { bodyFont } from './fonts';
 export const metadata: Metadata = {
   title: 'Toad Creatives',
   description: 'Hybrid nature × tech motion',
+  viewport: {
+    width: 'device-width',
+    initialScale: 1,
+    maximumScale: 1,
+    userScalable: false,
+  },
 };
 
 export default function RootLayout({

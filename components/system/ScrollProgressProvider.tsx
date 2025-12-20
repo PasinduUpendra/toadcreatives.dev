@@ -50,6 +50,10 @@ export const ScrollProgressProvider: React.FC<ProviderProps> = ({
 
   const DEADZONE = 5;       // ignore tiny jitter
   const STEP_DELAY = 600;   // ms between allowed steps – tune to taste
+  const TOUCH_THRESHOLD = 50; // minimum swipe distance in pixels
+
+  // Touch handling state
+  const touchStartYRef = useRef<number | null>(null);
 
   const updateIndex = (next: number) => {
     const clamped = clampIndex(next);
@@ -102,7 +106,65 @@ export const ScrollProgressProvider: React.FC<ProviderProps> = ({
       stepTimeoutRef.current = window.setTimeout(unlockStep, STEP_DELAY);
     };
 
+    const handleTouchStart = (event: TouchEvent) => {
+      if (event.touches.length === 1) {
+        touchStartYRef.current = event.touches[0].clientY;
+      }
+    };
+
+    const handleTouchMove = (event: TouchEvent) => {
+      // Prevent default scrolling on touch devices
+      event.preventDefault();
+    };
+
+    const handleTouchEnd = (event: TouchEvent) => {
+      if (touchStartYRef.current === null || event.changedTouches.length === 0) {
+        return;
+      }
+
+      const touchEndY = event.changedTouches[0].clientY;
+      const deltaY = touchStartYRef.current - touchEndY;
+
+      // Reset touch start
+      touchStartYRef.current = null;
+
+      // Check if swipe is significant enough
+      if (Math.abs(deltaY) < TOUCH_THRESHOLD) {
+        return;
+      }
+
+      // If a step is currently animating / locked, ignore
+      if (isSteppingRef.current) {
+        return;
+      }
+
+      const dir: Direction = deltaY > 0 ? "down" : "up";
+      const current = indexRef.current;
+      const next = clampIndex(current + (dir === "down" ? 1 : -1));
+
+      // At bounds → nothing to do
+      if (next === current) return;
+
+      // Commit single step
+      isSteppingRef.current = true;
+      setDirection(dir);
+      updateIndex(next);
+
+      // Keep real page scroll pinned
+      window.scrollTo({ top: 0, left: 0 });
+
+      // Unlock after STEP_DELAY
+      if (stepTimeoutRef.current !== null) {
+        window.clearTimeout(stepTimeoutRef.current);
+      }
+      stepTimeoutRef.current = window.setTimeout(unlockStep, STEP_DELAY);
+    };
+
+    // Add event listeners for both wheel and touch
     window.addEventListener("wheel", handleWheel, { passive: false });
+    window.addEventListener("touchstart", handleTouchStart, { passive: true });
+    window.addEventListener("touchmove", handleTouchMove, { passive: false });
+    window.addEventListener("touchend", handleTouchEnd, { passive: true });
 
     // Disable native scroll globally.
     const prevHtmlOverflow = document.documentElement.style.overflow;
@@ -112,6 +174,9 @@ export const ScrollProgressProvider: React.FC<ProviderProps> = ({
 
     return () => {
       window.removeEventListener("wheel", handleWheel);
+      window.removeEventListener("touchstart", handleTouchStart);
+      window.removeEventListener("touchmove", handleTouchMove);
+      window.removeEventListener("touchend", handleTouchEnd);
       document.documentElement.style.overflow = prevHtmlOverflow;
       document.body.style.overflow = prevBodyOverflow;
       unlockStep();
