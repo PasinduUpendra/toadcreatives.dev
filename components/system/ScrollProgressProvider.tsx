@@ -54,6 +54,46 @@ export const ScrollProgressProvider: React.FC<ProviderProps> = ({
 
   // Touch handling state
   const touchStartYRef = useRef<number | null>(null);
+  const shouldHijackTouchRef = useRef<boolean>(false);
+
+  /**
+   * Helper to determine if a touch gesture should be allowed to scroll normally
+   * (i.e., we should NOT hijack it for section stepping).
+   * Returns true if the target is inside a scrollable region or is a form control.
+   */
+  const isGestureInsideScrollableRegion = (target: EventTarget | null): boolean => {
+    if (!target || !(target instanceof HTMLElement)) return false;
+
+    let el: HTMLElement | null = target;
+
+    // Walk up the DOM tree to check for exemptions
+    while (el && el !== document.body) {
+      // 1. Check for explicit opt-in via data attribute
+      if (el.dataset.allowScroll === "true") {
+        return true;
+      }
+
+      // 2. Check if it's a native form control that should always work
+      const tagName = el.tagName.toLowerCase();
+      if (["input", "textarea", "select", "button", "a"].includes(tagName)) {
+        return true;
+      }
+
+      // 3. Check if element is actually scrollable
+      const style = window.getComputedStyle(el);
+      const overflowY = style.overflowY;
+      if (overflowY === "auto" || overflowY === "scroll") {
+        // Verify it has scrollable content
+        if (el.scrollHeight > el.clientHeight) {
+          return true;
+        }
+      }
+
+      el = el.parentElement;
+    }
+
+    return false;
+  };
 
   const updateIndex = (next: number) => {
     const clamped = clampIndex(next);
@@ -108,25 +148,44 @@ export const ScrollProgressProvider: React.FC<ProviderProps> = ({
 
     const handleTouchStart = (event: TouchEvent) => {
       if (event.touches.length === 1) {
-        touchStartYRef.current = event.touches[0].clientY;
+        // Check if this gesture should be hijacked for section stepping
+        const shouldHijack = !isGestureInsideScrollableRegion(event.target);
+        shouldHijackTouchRef.current = shouldHijack;
+
+        if (shouldHijack) {
+          touchStartYRef.current = event.touches[0].clientY;
+        } else {
+          touchStartYRef.current = null;
+        }
       }
     };
 
     const handleTouchMove = (event: TouchEvent) => {
-      // Prevent default scrolling on touch devices
-      event.preventDefault();
+      // Only prevent default scrolling if we're hijacking this gesture for section stepping
+      if (shouldHijackTouchRef.current) {
+        event.preventDefault();
+      }
     };
 
     const handleTouchEnd = (event: TouchEvent) => {
+      // If we're not hijacking this touch, ignore it
+      if (!shouldHijackTouchRef.current) {
+        touchStartYRef.current = null;
+        shouldHijackTouchRef.current = false;
+        return;
+      }
+
       if (touchStartYRef.current === null || event.changedTouches.length === 0) {
+        shouldHijackTouchRef.current = false;
         return;
       }
 
       const touchEndY = event.changedTouches[0].clientY;
       const deltaY = touchStartYRef.current - touchEndY;
 
-      // Reset touch start
+      // Reset touch state
       touchStartYRef.current = null;
+      shouldHijackTouchRef.current = false;
 
       // Check if swipe is significant enough
       if (Math.abs(deltaY) < TOUCH_THRESHOLD) {

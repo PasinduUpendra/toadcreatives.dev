@@ -355,7 +355,7 @@ const Works: React.FC = () => {
               className="max-w-6xl w-full grid gap-10 md:gap-14 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start"
             >
               {/* Left: images / visual column */}
-              <div className="space-y-5 h-[70vh] overflow-y-auto pr-1 scrollbar-contrast">
+              <div className="space-y-5 h-[70vh] overflow-y-auto pr-1 scrollbar-contrast" data-allow-scroll="true">
                 {(activeProject.images ?? []).map((image) => (
                   <motion.div
                     key={image.id}
@@ -408,7 +408,7 @@ const Works: React.FC = () => {
               </div>
 
               {/* Right: meta + story */}
-              <div className="h-[70vh] overflow-y-auto pl-0 md:pl-2 flex flex-col gap-8 scrollbar-contrast">
+              <div className="h-[70vh] overflow-y-auto pl-0 md:pl-2 flex flex-col gap-8 scrollbar-contrast" data-allow-scroll="true">
                 <motion.header
                   variants={metaItemVariants}
                   className="space-y-3"

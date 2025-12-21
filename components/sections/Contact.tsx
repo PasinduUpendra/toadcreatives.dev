@@ -129,6 +129,7 @@ const Contact: React.FC = () => {
                 ease: [0.19, 1, 0.22, 1],
                 delay: 0.08,
               }}
+              data-allow-scroll="true"
             >
               <form onSubmit={handleSubmit} className="space-y-4">
                 {/* NAME + EMAIL */}
