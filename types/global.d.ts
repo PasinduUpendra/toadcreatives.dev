@@ -5,3 +5,6 @@ declare module "*/tubes1.min.js" {
   };
   export default init;
 }
+
+// Allow side-effect imports of CSS files (e.g. `import './globals.css'`).
+declare module "*.css";
