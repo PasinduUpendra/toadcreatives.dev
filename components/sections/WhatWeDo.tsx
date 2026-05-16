@@ -17,18 +17,18 @@ const WHAT_STEPS: ScrollStep[] = [
 const paragraphs = [
   {
     id: "what_p1",
-    label: "What we design",
-    body: "Interactive portfolios, launch visuals, and micro-sites where the motion is the story—not decoration on top.",
+    label: "Websites & e-commerce",
+    body: "Marketing sites, portfolios, and storefronts on WordPress, Next.js, Shopify, and WooCommerce — built to feel premium without slowing down.",
   },
   {
     id: "what_p2",
-    label: "How it behaves",
-    body: "We choreograph scroll, hover, and idle states so every tiny interaction reveals a bit more of the world you’re building.",
+    label: "Apps & Products",
+    body: "Mobile apps in Flutter and React Native, web apps in Next.js and the backends and Shopify storefronts that connect them into one ecosystem.",
   },
   {
     id: "what_p3",
-    label: "Where it ships",
-    body: "From experimental prototypes to production builds in Next.js and WebGL, tuned to feel premium and run fast.",
+    label: "Automation & AI Systems",
+    body: "n8n pipelines, autonomous agents, and custom AI workflows that take a process you do by hand and quietly run it for you.",
   },
 ];
 
@@ -78,7 +78,7 @@ const WhatWeDo: React.FC = () => {
         >
           <div className="max-w-6xl w-full grid grid-cols-1 md:grid-cols-[minmax(0,1.2fr)_minmax(0,0.9fr)] gap-12 md:gap-16 items-center">
             {/* Left column – paragraphs */}
-            <div className="pointer-events-auto">
+            <div className="pointer-events-auto order-2 md:order-1">
               <AnimatePresence mode="wait">
                 {!isIntroOnly && activeParagraph && (
                   <motion.div
@@ -112,7 +112,7 @@ const WhatWeDo: React.FC = () => {
             </div>
 
             {/* Right column – kinetic heading */}
-            <div className="pointer-events-none flex justify-end">
+            <div className="pointer-events-none flex justify-end order-1 md:order-2">
               <motion.div
                 className="inline-flex flex-col items-end gap-4 text-right"
                 initial="hidden"
@@ -185,8 +185,7 @@ const WhatWeDo: React.FC = () => {
                     ease: [0.19, 1, 0.22, 1],
                   }}
                 >
-                  The craft layer: how the interface actually moves when someone
-                  scrolls, hovers, or lets it idle.
+                  What I build, and how it tends to come together in practice. The kinds of projects I love to work on, and the details that make them feel alive.
                 </motion.p>
               </motion.div>
             </div>

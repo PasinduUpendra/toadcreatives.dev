@@ -42,7 +42,7 @@ const Hero: React.FC = () => {
             <h1
               className={`${displayFont.className} text-[clamp(1.5rem,2vw,2.5rem)] font-semibold leading-[0.95] tracking-tight text-glow-strong`}
             >
-              Hybrid nature <span className="text-lime-300">×</span> tech motion
+              Websites, Apps, AI Systems <span className="text-lime-300">×</span> Built end-to-end & right!
             </h1>
           </div>
         </motion.section>

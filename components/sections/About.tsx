@@ -17,18 +17,18 @@ const ABOUT_STEPS: ScrollStep[] = [
 const paragraphs = [
   {
     id: "about_p1",
-    label: "Opening statement",
-    body: "We tune light, depth, and motion until digital scenes feel like living systems—not flat screens.",
+    label: "About Me",
+    body: "I'm Pasindu — a developer and product person who builds websites, mobile apps, e-commerce stores, and automation systems for founders who want one person who can think across the whole stack. I care about the details that make a product feel premium, and I obsess over performance and polish because I know how much they matter to the people who use what I build.",
   },
   {
     id: "about_p2",
-    label: "How we work",
-    body: "We prototype fast in WebGL, SVG, and code, then sculpt every transition by hand until the interface breathes.",
+    label: "How I Work",
+    body: "Specifications first, then code. I write everything down before I build it — the architecture, the trade-offs, the unknowns. Mobile and performance are top of mind from the start, and I obsess over the details that make a product feel premium. I’m not just a coder — I care about the whole experience, and I want to make sure it’s right.",
   },
   {
     id: "about_p3",
-    label: "Who we team up with",
-    body: "Studios, founders, and art directors who need motion that carries a story from first hover to final launch.",
+    label: "Who I Team Up With",
+    body: "Founders, small teams, and studios who need someone who can hold the whole thing — design, frontend, backend, infrastructure — and still be easy to talk to along the way. I’m not just a hired gun; I want to be a partner in bringing your vision to life, and I want to make sure we build something that feels right in every detail.",
   },
 ];
 
@@ -151,8 +151,7 @@ const About: React.FC = () => {
                     ease: [0.19, 1, 0.22, 1],
                   }}
                 >
-                  The studio layer: who’s behind the tubes, what drives the
-                  experiments, and why everything moves the way it does.
+                  The person behind it. How I think, how I work, and the kind of projects I take on.
                 </motion.p>
               </motion.div>
             </div>
