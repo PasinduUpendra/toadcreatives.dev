@@ -3,6 +3,7 @@ import type { Metadata, Viewport } from 'next';
 import Script from 'next/script';
 import './globals.css';
 import { bodyFont } from './fonts';
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const SITE_URL = 'https://toadcreatives.dev';
 const SITE_NAME = 'Toad Creatives';
