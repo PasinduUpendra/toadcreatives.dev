@@ -1,14 +1,14 @@
-// FILE: components/visuals/TubesSystem.tsx
 "use client";
 
 import React, { useMemo } from "react";
-import { useTubesScrollState } from "../system/useTubesScrollState";
+import { useTubesMode } from "../system/useTubesScrollState";
 import TubesCursor from "./TubesCursor";
 
 export const TubesSystem: React.FC = () => {
-  const { mode } = useTubesScrollState();
+  const mode = useTubesMode();
 
-  // Initialise tubes once with your hero palette
+  // Initialised once with the hero palette; the per-section shift is applied as
+  // a filter so the WebGL scene never has to be torn down and rebuilt.
   const baseConfig = useMemo(
     () => ({
       tubes: {
@@ -22,33 +22,30 @@ export const TubesSystem: React.FC = () => {
     []
   );
 
-  // Per-section color treatment applied as a filter on the canvas.
-  // This actually shifts the rendered tube colors (no overlays).
   const filter = useMemo(() => {
     switch (mode) {
       case "about":
-        // cooler cyan shift, slightly brighter
         return "hue-rotate(155deg) saturate(1.3) brightness(1.05)";
       case "what":
-        // energetic lime / yellowish shift
         return "hue-rotate(70deg) saturate(1.4) brightness(1.08)";
       case "work":
-        // more neutral, slightly desaturated and brighter
         return "saturate(0.6) brightness(1.15)";
+      case "contact":
+        return "hue-rotate(200deg) saturate(1.15) brightness(1.02)";
       case "hero":
       default:
-        // raw hero look
         return "none";
     }
   }, [mode]);
 
   return (
     <div
-      className="w-full h-full"
+      className="h-full w-full"
       style={{
-        // Apply filter directly to the WebGL canvas output
         filter,
-        transition: "filter 420ms cubic-bezier(0.19, 1, 0.22, 1)",
+        // Slower than the old 420ms: with continuous scrolling the boundary is
+        // crossed gradually, so a longer blend keeps the shift from snapping.
+        transition: "filter 700ms cubic-bezier(0.19, 1, 0.22, 1)",
       }}
     >
       <TubesCursor config={baseConfig} />

@@ -1,16 +1,16 @@
 "use client";
 
-import React from "react";
 import MenuButton from "./MenuButton";
 
-const NavBar: React.FC = () => {
+export default function NavBar() {
   return (
-    <div className="pointer-events-none fixed top-6 left-0 right-0 z-[70] flex justify-end px-8">
+    <header
+      data-site-nav
+      className="pointer-events-none fixed inset-x-0 top-6 z-90 flex justify-end px-8 transition-opacity duration-300"
+    >
       <div className="pointer-events-auto">
         <MenuButton />
       </div>
-    </div>
+    </header>
   );
-};
-
-export default NavBar;
+}

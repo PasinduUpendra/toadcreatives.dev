@@ -1,50 +1,41 @@
-// FILE: components/system/useTubesScrollState.ts
-'use client';
+"use client";
 
-import { useMemo } from 'react';
-import { useScrollSteps } from './ScrollProgressProvider';
-import type { ScrollStep } from './scrollTimeline';
+import { useEffect, useState } from "react";
+import { ScrollTrigger } from "@/components/motion/gsap";
 
-export type TubesMode = 'hero' | 'about' | 'what' | 'work';
-
-export type TubesScrollState = {
-  step: ScrollStep;
-  mode: TubesMode;
-};
+export type TubesMode = "hero" | "about" | "what" | "work" | "contact";
 
 /**
- * Map the global scroll step into a simpler tubes "mode"
- * so the Three.js system can switch colors / uniforms.
+ * Reports which section owns the viewport so the WebGL field can re-tint.
+ *
+ * Sections opt in by carrying `data-tube-mode`. This used to be derived from a
+ * discrete step index; it now reads real scroll position, so the colour still
+ * changes per section but the page underneath scrolls continuously.
  */
-export function useTubesScrollState(): TubesScrollState {
-  const { step } = useScrollSteps();
+export function useTubesMode(): TubesMode {
+  const [mode, setMode] = useState<TubesMode>("hero");
 
-  const mode: TubesMode = useMemo(() => {
-    if (
-      step === 'about_intro' ||
-      step === 'about_p1' ||
-      step === 'about_p2' ||
-      step === 'about_p3'
-    ) {
-      return 'about';
-    }
+  useEffect(() => {
+    const sections = Array.from(
+      document.querySelectorAll<HTMLElement>("[data-tube-mode]")
+    );
 
-    if (
-      step === 'what_intro' ||
-      step === 'what_p1' ||
-      step === 'what_p2' ||
-      step === 'what_p3'
-    ) {
-      return 'what';
-    }
+    // Midpoint boundaries: a section takes over once it owns the middle of the
+    // screen, which is where the eye is, rather than when its top edge appears.
+    const triggers = sections.map((el) =>
+      ScrollTrigger.create({
+        trigger: el,
+        start: "top 50%",
+        end: "bottom 50%",
+        onToggle: (self) => {
+          const next = el.dataset.tubeMode as TubesMode | undefined;
+          if (self.isActive && next) setMode(next);
+        },
+      })
+    );
 
-    if (step === 'work_intro') {
-      return 'work';
-    }
+    return () => triggers.forEach((t) => t.kill());
+  }, []);
 
-    // default: hero
-    return 'hero';
-  }, [step]);
-
-  return { step, mode };
+  return mode;
 }

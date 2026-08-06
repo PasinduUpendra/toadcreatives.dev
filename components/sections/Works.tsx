@@ -1,458 +1,272 @@
-// FILE: components/sections/Works.tsx
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { AnimatePresence, motion, type Variants } from "framer-motion";
-import { useScrollSteps } from "../system/ScrollProgressProvider";
+import Image from "next/image";
+import Link from "next/link";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { displayFont } from "@/app/fonts";
+import ScrubText from "@/components/motion/ScrubText";
+import { gsap, prefersReducedMotion } from "@/components/motion/gsap";
+import { projects, type Project } from "@/content/projects";
+import { work } from "@/content/site";
+import CaseStudySheet from "./CaseStudySheet";
 
-type ProjectId = "coast67" | "b48" | "eliteTapp";
+/** Cards start folded almost flat, hinged on their own top edge. */
+const START_ROTATION = -88;
+/** Peak tilt in degrees when the pointer sits at a card's corner. */
+const TILT = 7;
 
-interface ProjectImage {
-  id: string;
-  src?: string;
-  caption: string;
-  videoSrc?: string;
-}
+export default function Works() {
+  const root = useRef<HTMLElement>(null);
+  const [active, setActive] = useState<Project | null>(null);
 
-interface Project {
-  id: ProjectId;
-  label: string;
-  title: string;
-  category: string;
-  year: string;
-  role: string;
-  summary: string;
-  story: string[];
-  images?: ProjectImage[];
-  background?: string;
-}
+  // Remembered so focus lands back on the card that opened the sheet rather
+  // than falling to the top of the document.
+  const opener = useRef<HTMLAnchorElement | null>(null);
 
-const projects: Project[] = [
-  {
-    id: "coast67",
-    label: "Coast 67",
-    title: "Coast 67 — Oceanfront Motion Hotel Website",
-    category: "Hotel website · Interaction design",
-    background: "/assets/projects/Work-Coast67.png",
-    year: "2024",
-    role: "Creative direction · UX · Front-end",
-    summary:
-      "A motion-driven hotel website designed to communicate relaxed luxury through atmosphere, scroll-based interaction, and precision layout. The project required balancing advanced WebGL animation with real-world constraints like slow hotel Wi-Fi, high-density images, and a hospitality user journey focused on bookings.",
-    story: [
-      "Coast 67 wanted a website that feels like the property itself: calm, premium, and ocean-driven. The digital experience needed to match the brand's personality — relaxed luxury — without cluttering the user journey or sacrificing clarity.",
-      "I designed an interaction model built around soft motion, scroll-driven pacing, and minimal UI framing. Each section reveals in a rhythm that mimics moving through the physical spaces: from arrival, to rooms, to restaurant, to booking.",
-      "Because many guests browse on spotty coastal Wi-Fi, every motion element and image was tuned for performance. WebGL was used as a framing layer rather than a distraction, and the layout is built so guests can get from 'first impression' to 'book now' without friction."
-    ],
-    images: [
-      {
-        id: "coast67-hero",
-        src: "/assets/projects/Coast67-1.png",
-        caption: "Hero view and first scroll impression."
-      },
-      {
-        id: "coast67-lobby",
-        src: "/assets/projects/Coast67-2.png",
-        caption: "Lobby and reception — material-driven hospitality story."
-      }
-    ]
-  },
-  {
-    id: "b48",
-    label: "B48 Studios",
-    title: "B48 Studios — Leather Apparel Storefront",
-    category: "E-commerce · Brand site",
-    background: "/assets/projects/Work-B48.png",
-    year: "2024",
-    role: "UX · Visual design · Front-end",
-    summary:
-      "A material-driven storefront built to make leather feel tactile on screen, with a curated product hierarchy and calm, focused PDP flows.",
-    story: [
-      "B48 is all about craft and texture. The visual system leans into tight crops, macro photography, and high contrast so visitors can almost feel the leather through the screen.",
-      "I simplified the information architecture into a few strong categories and rebuilt the product cards and PDP layout to keep focus on materials, fit, and silhouette. Motion is minimal and precise—just enough to communicate responsiveness without adding noise.",
-      "Checkout friction was reduced by cleaning up the WooCommerce flow, improving field layout and error states, and tightening the overall rhythm. The result is a store that feels premium but stays fast and direct for shoppers."
-    ],
-    images: [
-      {
-        id: "b48-home",
-        videoSrc: "/assets/projects/B48Studio-1.webm",
-        caption: "Landing experience with bold hero and featured pieces."
-      },
-      {
-        id: "b48-pdp",
-        src: "/assets/projects/B48Studio-2.png",
-        caption: "Products page with WooCommerce integration."
-      }
-    ]
-  },
-  {
-    id: "eliteTapp",
-    label: "Elite Tapp",
-    title: "EliteTapp — NFC Social Sharing Product & App Ecosystem",
-    category: "Product design · Mobile app",
-    background: "/assets/projects/Work-EliteTapp.png",
-    year: "2023",
-    role: "Tech Lead & Product Designer",
-    summary:
-      "EliteTapp began as a simple idea — make sharing your digital identity feel effortless. One tap, and everything about you is there. I led a multidisciplinary team of backend engineers, frontend developers, and UI/UX designers to turn that idea into a complete product ecosystem.",
-    story: [
-      "I defined the technical direction for the entire project, selecting Flutter as our core framework so we could build fast, ship on both platforms, and maintain a unified design system. On the server side, I architected the backend services that power profile creation, NFC interactions, link routing, and real-time updates across devices.",
-      "While the app handled the digital identity, we needed a physical counterpart. I built the EliteTapp Shopify store from scratch — product structure, layout, checkout flow — enabling us to sell NFC cards and tags as part of a seamless purchase-to-activation experience.",
-      "The result was a fully connected environment: the app, the backend, and the physical products all speaking the same language. A clean interface, progressive disclosure, and micro-interactions that keep the user moving forward without thinking."
-    ],
-    images: [
-      {
-        id: "elite-dashboard",
-        videoSrc: "/assets/projects/EliteTapp-1.webm",
-        caption: "Main dashboard with key access actions surfaced."
-      },
-      {
-        id: "elite-flows",
-        src: "/assets/projects/EliteTapp-2.png",
-        caption: "Guest access and device management flow screens."
-      }
-    ]
-  }
-];
+  // Whether the sheet's URL was pushed by us, so closing can unwind exactly
+  // what we added and nothing more.
+  const didPush = useRef(false);
 
-const sectionVariants: Variants = {
-  hidden: { opacity: 0, y: 90, scale: 0.9 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.7,
-      ease: [0.19, 1, 0.22, 1],
-      when: "beforeChildren",
-      staggerChildren: 0.08
+  // Stable identity: an inline arrow here would be a new prop every render,
+  // which re-ran the sheet's open effect and restarted its entrance animation.
+  const closeSheet = useCallback(() => {
+    setActive(null);
+    if (didPush.current) {
+      // Pop our own entry rather than pushing a second one. Pushing on close
+      // left two entries per open/close cycle, so Back landed on /work/<slug>
+      // with no sheet open — the address bar and the page disagreed.
+      didPush.current = false;
+      window.history.back();
+    } else if (window.location.pathname.startsWith("/work/")) {
+      // Arrived here by deep link, so there is nothing of ours to pop.
+      window.history.replaceState(null, "", "/#work");
     }
-  },
-  exit: {
-    opacity: 0,
-    y: -70,
-    scale: 1.02,
-    transition: { duration: 0.55, ease: [0.19, 1, 0.22, 1] }
-  }
-};
+    opener.current?.focus();
+  }, []);
 
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 40, scale: 0.92 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.55, ease: [0.19, 1, 0.22, 1] }
-  }
-};
-
-const overlayVariants: Variants = {
-  hidden: { opacity: 0, y: 80, scale: 0.96 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.7,
-      ease: [0.19, 1, 0.22, 1],
-      when: "beforeChildren",
-      staggerChildren: 0.06
-    }
-  },
-  exit: {
-    opacity: 0,
-    y: -50,
-    scale: 0.98,
-    transition: { duration: 0.55, ease: [0.19, 1, 0.22, 1] }
-  }
-};
-
-const metaItemVariants: Variants = {
-  hidden: { opacity: 0, y: 24 },
-  visible: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: [0.19, 1, 0.22, 1] }
-  }
-};
-
-const Works: React.FC = () => {
-  const { step } = useScrollSteps();
-  const isActive = step === "work_intro";
-
-  const [activeProjectId, setActiveProjectId] = useState<ProjectId | null>(null);
-  const activeProject =
-    activeProjectId != null
-      ? projects.find((p) => p.id === activeProjectId) ?? null
-      : null;
-
-  // Auto-close overlay when we leave the Work section
+  // Back button closes the sheet instead of leaving the site.
   useEffect(() => {
-    if (step !== "work_intro" && activeProjectId !== null) {
-      setActiveProjectId(null);
-    }
-  }, [step, activeProjectId]);
+    const onPop = () => {
+      // The entry is already gone; closeSheet must not try to pop again.
+      didPush.current = false;
+      setActive(null);
+    };
+    window.addEventListener("popstate", onPop);
+    return () => window.removeEventListener("popstate", onPop);
+  }, []);
 
-  // Lock global scroll while overlay is open
   useEffect(() => {
-    if (!activeProject) return;
+    const el = root.current;
+    if (!el || prefersReducedMotion()) return;
 
-    const prevHtmlOverflow = document.documentElement.style.overflow;
-    const prevBodyOverflow = document.body.style.overflow;
+    // gsap.context reverts animations but knows nothing about DOM listeners, so
+    // those are tracked here and removed explicitly.
+    const teardown: Array<() => void> = [];
 
-    document.documentElement.style.overflow = "hidden";
-    document.body.style.overflow = "hidden";
+    const ctx = gsap.context(() => {
+      const cards = gsap.utils.toArray<HTMLElement>("[data-card]");
+
+      cards.forEach((card, i) => {
+        const media = card.querySelector<HTMLElement>("[data-media]");
+        if (!media) return;
+
+        // Entrance: the card swings down on its top edge while its artwork
+        // rises to meet it and the shadow settles underneath. Three parts on one
+        // timeline so they resolve together rather than as separate events.
+        gsap
+          .timeline({
+            scrollTrigger: { trigger: card, start: "top 86%" },
+            defaults: { ease: "power3.out" },
+          })
+          .fromTo(
+            card,
+            {
+              rotateX: START_ROTATION,
+              autoAlpha: 0,
+              y: 40,
+              transformOrigin: "50% 0%",
+            },
+            { rotateX: 0, autoAlpha: 1, y: 0, duration: 1.05, delay: i * 0.1 },
+          )
+          .fromTo(
+            media,
+            { scale: 1.25, yPercent: 8 },
+            { scale: 1, yPercent: 0, duration: 1.3 },
+            "<",
+          )
+          .fromTo(
+            card.querySelector("[data-sweep]"),
+            { xPercent: -110 },
+            { xPercent: 130, duration: 1.1, ease: "power2.inOut" },
+            "<0.15",
+          );
+
+        // Hover: the card tilts toward the pointer in the same 3D space the
+        // entrance used, and the artwork drifts the opposite way for depth.
+        const rotX = gsap.quickTo(card, "rotateX", {
+          duration: 0.5,
+          ease: "power3",
+        });
+        const rotY = gsap.quickTo(card, "rotateY", {
+          duration: 0.5,
+          ease: "power3",
+        });
+        const medX = gsap.quickTo(media, "xPercent", {
+          duration: 0.7,
+          ease: "power3",
+        });
+        const medY = gsap.quickTo(media, "yPercent", {
+          duration: 0.7,
+          ease: "power3",
+        });
+
+        const onMove = (event: PointerEvent) => {
+          const r = card.getBoundingClientRect();
+          const nx = (event.clientX - r.left) / r.width - 0.5;
+          const ny = (event.clientY - r.top) / r.height - 0.5;
+          rotY(nx * TILT * 2);
+          rotX(-ny * TILT * 2);
+          medX(-nx * 4);
+          medY(-ny * 4);
+        };
+        const onEnter = () =>
+          gsap.to(card, { y: -8, duration: 0.5, ease: "power3.out" });
+        const onLeave = () => {
+          rotX(0);
+          rotY(0);
+          medX(0);
+          medY(0);
+          gsap.to(card, { y: 0, duration: 0.6, ease: "power3.out" });
+        };
+
+        card.addEventListener("pointermove", onMove);
+        card.addEventListener("pointerenter", onEnter);
+        card.addEventListener("pointerleave", onLeave);
+        teardown.push(() => {
+          card.removeEventListener("pointermove", onMove);
+          card.removeEventListener("pointerenter", onEnter);
+          card.removeEventListener("pointerleave", onLeave);
+        });
+      });
+    }, el);
 
     return () => {
-      document.documentElement.style.overflow = prevHtmlOverflow;
-      document.body.style.overflow = prevBodyOverflow;
+      teardown.forEach((fn) => fn());
+      ctx.revert();
     };
-  }, [activeProject]);
-
-  const closeOverlay = () => {
-    setActiveProjectId(null);
-  };
+  }, []);
 
   return (
     <>
-      <AnimatePresence>
-        {isActive && (
-          <motion.section
-            key="works-section"
-            data-section="work"
-            className="fixed inset-0 flex flex-col items-center justify-center px-6 md:px-10 lg:px-16 pointer-events-none"
-            variants={sectionVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-          >
-            <motion.div className="max-w-5xl w-full mx-auto pointer-events-auto">
-              {/* Header */}
-              <motion.div
-                className="mb-10 text-center"
-                initial={{ opacity: 0, y: 24 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ duration: 0.55, ease: [0.19, 1, 0.22, 1] }}
-              >
-                <p className="text-[0.68rem] tracking-[0.28em] uppercase text-neutral-500 mb-2">
-                  Selected work
-                </p>
-                <h2
-                  className={`${displayFont.className} text-[clamp(2.2rem,3vw,3rem)] font-semibold`}
-                >
-                  Work
-                </h2>
-                <motion.div
-                  className="h-[2px] w-40 mx-auto bg-gradient-to-r from-lime-300/0 via-lime-300 to-lime-300/0 rounded-full origin-center"
-                  initial={{ scaleX: 0 }}
-                  animate={{ scaleX: 1 }}
-                  transition={{
-                    duration: 0.6,
-                    ease: [0.19, 1, 0.22, 1],
-                    delay: 0.3,
-                  }}
-                />
-                <p className="mt-3 text-sm md:text-base text-neutral-300 max-w-xl mx-auto">
-                  Three projects that show how motion, interaction, and narrative
-                  come together across hospitality, commerce, and product design.
-                </p>
-              </motion.div>
+      <section
+        ref={root}
+        id="work"
+        data-tube-mode="work"
+        // Small bottom padding on purpose: contact should arrive immediately
+        // after the cards, not after a screen of empty scroll.
+        className="relative px-6 pt-[24vh] pb-[6vh] sm:px-10 lg:px-16"
+      >
+        <div className="mx-auto max-w-6xl">
+          <p className="font-mono text-[0.62rem] uppercase tracking-[0.3em] text-lime-300">
+            {work.eyebrow}
+          </p>
 
-              {/* Cards */}
-              <motion.div
-                className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-6 md:gap-8"
-                variants={{ hidden: {}, visible: {} }}
+          <ScrubText
+            as="h2"
+            className={`${displayFont.className} mt-7 max-w-3xl text-[clamp(1.6rem,3.9vw,3.1rem)] font-semibold leading-[1.14] tracking-tight`}
+          >
+            {work.lead}
+          </ScrubText>
+
+          {/* Perspective on the container, so all three cards share one vanishing
+              point instead of each folding in its own space. */}
+          <div
+            className="mt-20 grid grid-cols-1 gap-7 sm:grid-cols-2 lg:grid-cols-3"
+            style={{ perspective: 1600 }}
+          >
+            {projects.map((project) => (
+              // A real link, so it is crawlable, shareable, and works with
+              // middle-click and "open in new tab". The click is intercepted to
+              // open the sheet instead of navigating, and the URL is pushed so
+              // the case study can still be copied out of the address bar.
+              <Link
+                key={project.slug}
+                href={`/work/${project.slug}`}
+                data-card
+                data-cursor
+                data-cursor-label="View"
+                onClick={(event) => {
+                  if (
+                    event.metaKey ||
+                    event.ctrlKey ||
+                    event.shiftKey ||
+                    event.button !== 0
+                  ) {
+                    return; // let the browser handle new-tab / new-window
+                  }
+                  event.preventDefault();
+                  opener.current = event.currentTarget;
+                  window.history.pushState(null, "", `/work/${project.slug}`);
+                  didPush.current = true;
+                  setActive(project);
+                }}
+                aria-label={`${project.name} — open case study`}
+                className="group relative overflow-hidden rounded-3xl border border-white/10 bg-neutral-900/70 text-left shadow-[0_24px_60px_rgba(0,0,0,0.6)] transition-colors hover:border-lime-300/40 focus-visible:ring-2 focus-visible:ring-lime-300 focus-visible:outline-none"
+                style={{
+                  willChange: "transform",
+                  transformStyle: "preserve-3d",
+                }}
               >
-                {projects.map((project) => (
-                  <motion.button
-                    key={project.id}
-                    type="button"
-                    variants={cardVariants}
-                    data-cursor="magnet"
-                    onClick={() => setActiveProjectId(project.id)}
-                    className="group relative aspect-[4/3] rounded-[32px] bg-neutral-900/90 border border-neutral-800 shadow-[0_26px_70px_rgba(0,0,0,0.85)] overflow-hidden text-left cursor-pointer"
-                  >
-                    {/* Background image */}
+                <div className="relative aspect-4/3 overflow-hidden">
                   <div
-                    className="
-                      absolute inset-0
-                      bg-cover bg-center
-                      scale-105
-                      opacity-90
-                      group-hover:scale-110
-                      group-hover:brightness-105
-                      group-hover:opacity-100
-                      transition-[transform,opacity,filter]
-                      duration-700
-                      ease-[0.19,1,0.22,1]
-                    "
-                    style={{ backgroundImage: `url(${project.background})` }}
-                  />
-
-                  {/* Overlay gradient for readability */}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/55 via-black/20 to-black/5 pointer-events-none" />
-
-                    {/* Content */}
-                    <div className="relative h-full w-full flex flex-col justify-between p-5">
-                      <div className="space-y-1">
-                        <p className="text-[0.55rem] uppercase tracking-[0.26em] text-neutral-500">
-                          {project.category}
-                        </p>
-                      </div>
-                      <div className="flex items-center justify-between text-[0.7rem] uppercase tracking-[0.22em] font-light">
-                        <span>View project story</span>
-                        <span className="group-hover:translate-x-1 transition-transform duration-300">
-                          ↗
-                        </span>
-                      </div>
-                    </div>
-                    {/* Hover lift / scale */}
-                    <div className="absolute inset-0 pointer-events-none group-hover:-translate-y-1 group-hover:scale-[1.02] transition-transform duration-400 ease-[0.19,1,0.22,1]" />
-                  </motion.button>
-                ))}
-              </motion.div>
-            </motion.div>
-          </motion.section>
-        )}
-      </AnimatePresence>
-
-      {/* Project detail overlay */}
-      <AnimatePresence>
-        {activeProject && (
-          <motion.div
-            key={`project-overlay-${activeProject.id}`}
-            className="fixed inset-0 z-50 bg-[#05070b]/95 text-white flex items-center justify-center px-6 md:px-10 lg:px-16 pointer-events-auto"
-            variants={overlayVariants}
-            initial="hidden"
-            animate="visible"
-            exit="exit"
-            onWheelCapture={(e) => {
-              e.stopPropagation();
-            }}
-            onTouchMoveCapture={(e) => {
-              e.stopPropagation();
-            }}
-          >
-            <motion.div
-              variants={metaItemVariants}
-              className="absolute top-5 left-6 md:top-7 md:left-10 text-[0.62rem] uppercase tracking-[0.26em] text-neutral-500"
-            >
-              Selected project
-            </motion.div>
-
-            <motion.button
-              type="button"
-              data-cursor="magnet"
-              onClick={closeOverlay}
-              variants={metaItemVariants}
-              className="absolute top-5 right-6 md:top-6 md:right-20 border border-white/30 rounded-full px-4 py-1.5 text-[0.7rem] uppercase tracking-[0.22em] hover:bg-white hover:text-black transition-all duration-200"
-            >
-              Close
-            </motion.button>
-
-            <motion.div
-              variants={metaItemVariants}
-              className="max-w-6xl w-full grid gap-10 md:gap-14 md:grid-cols-[minmax(0,1.15fr)_minmax(0,1fr)] items-start"
-            >
-              {/* Left: images / visual column */}
-              <div className="space-y-5 h-[70vh] overflow-y-auto pr-1 scrollbar-contrast" data-allow-scroll="true">
-                {(activeProject.images ?? []).map((image) => (
-                  <motion.div
-                    key={image.id}
-                    variants={metaItemVariants}
-                    className="
-                      relative
-                      rounded-[28px]
-                      border border-white/5
-                      bg-gradient-to-b from-neutral-950 to-neutral-800
-                      shadow-[0_30px_80px_rgba(0,0,0,0.9)]
-                      overflow-hidden
-                    "
+                    data-media
+                    className="absolute inset-0"
+                    style={{ willChange: "transform" }}
                   >
-                    {image.videoSrc ? (
-                      <video
-                        src={image.videoSrc}
-                        autoPlay
-                        loop
-                        muted
-                        playsInline
-                        className="block w-full aspect-[16/10] object-cover"
-                      />
-                    ) : image.src ? (
-                      <img
-                        src={image.src}
-                        alt={image.caption}
-                        className="block w-full aspect-[16/10] object-cover"
-                      />
-                    ) : (
-                      <div
-                        className="
-                          aspect-[16/10] w-full
-                          bg-[radial-gradient(circle_at_0%_0%,#b7f46533,transparent_55%),radial-gradient(circle_at_50%_120%,#24e0ff22,transparent_55%)]
-                        "
-                      />
-                    )}
-
-                    <div
-                      className="
-                        absolute bottom-4 left-4
-                        text-[0.7rem] uppercase tracking-[0.22em]
-                        bg-black/60 backdrop-blur-sm
-                        px-3 py-1.5 rounded-full text-neutral-200
-                      "
-                    >
-                      {image.caption}
-                    </div>
-                  </motion.div>
-                ))}
-              </div>
-
-              {/* Right: meta + story */}
-              <div className="h-[70vh] overflow-y-auto pl-0 md:pl-2 flex flex-col gap-8 scrollbar-contrast" data-allow-scroll="true">
-                <motion.header
-                  variants={metaItemVariants}
-                  className="space-y-3"
-                >
-                  <p className="text-[0.68rem] uppercase tracking-[0.28em] text-neutral-500">
-                    Case study
-                  </p>
-                  <h1 className="text-xl md:text-2xl lg:text-3xl font-semibold leading-tight">
-                    {activeProject.title}
-                  </h1>
-                  <p className="text-sm md:text-[0.95rem] text-neutral-300">
-                    {activeProject.summary}
-                  </p>
-                </motion.header>
-
-                <motion.div
-                  variants={metaItemVariants}
-                  className="grid grid-cols-2 gap-4 text-[0.7rem] uppercase tracking-[0.2em] text-neutral-400"
-                >
-                  <div>
-                    <p className="text-neutral-500 mb-1">Year</p>
-                    <p className="text-neutral-200">{activeProject.year}</p>
+                    <Image
+                      src={project.cover}
+                      alt=""
+                      fill
+                      sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                      className="object-cover"
+                    />
                   </div>
-                  <div>
-                    <p className="text-neutral-500 mb-1">Role</p>
-                    <p className="text-neutral-200">{activeProject.role}</p>
-                  </div>
-                </motion.div>
+                  {/* A single band of light crossing the card as it lands. */}
+                  <span
+                    data-sweep
+                    aria-hidden="true"
+                    className="pointer-events-none absolute inset-y-0 -left-1/3 w-1/3 skew-x-12 bg-linear-to-r from-transparent via-white/25 to-transparent"
+                  />
+                </div>
 
-                <motion.div
-                  variants={metaItemVariants}
-                  className="space-y-5 text-base md:text-[1.1rem] leading-relaxed text-neutral-200"
-                >
-                  {activeProject.story.map((paragraph, index) => (
-                    <p key={index}>{paragraph}</p>
-                  ))}
-                </motion.div>
-              </div>
-            </motion.div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+                {/* The covers are light brand lockups, so the caption sits on its
+                    own solid panel rather than floating over white artwork where
+                    it was effectively unreadable. */}
+                <div className="border-t border-white/10 bg-neutral-950 p-5">
+                  <p className="font-mono text-[0.52rem] uppercase tracking-[0.24em] text-neutral-400">
+                    {project.category}
+                  </p>
+                  {/* Real text, not baked into the artwork — the old cards gave
+                      assistive tech no project name at all. */}
+                  <h3
+                    className={`${displayFont.className} mt-1.5 text-lg font-semibold text-white`}
+                  >
+                    {project.name}
+                  </h3>
+                  <span className="mt-3 flex items-center gap-2 font-mono text-[0.55rem] uppercase tracking-[0.2em] text-lime-300 opacity-0 transition-opacity duration-300 group-hover:opacity-100 group-focus-visible:opacity-100">
+                    Read the case study
+                    <span aria-hidden="true">↗</span>
+                  </span>
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {active && (
+        <CaseStudySheet project={active} onClose={closeSheet} />
+      )}
     </>
   );
-};
-
-export default Works;
+}

@@ -1,9 +1,11 @@
 @import "tailwindcss";
 
-/* Reset / base */
-
-:root {
-  font-family: var(--font-body);
+@theme {
+  --color-ink: #050505;
+  --color-surface: #0b0d0b;
+  --color-lime: #bef264;
+  --color-toad: #7bb237;
+  --ease-expo: cubic-bezier(0.19, 1, 0.22, 1);
 }
 
 *,
@@ -11,158 +13,74 @@
 *::after {
   box-sizing: border-box;
 }
-html, body {
-  cursor: none;
-  overscroll-behavior: none; /* Prevent pull-to-refresh and rubber-band scrolling */
-  -webkit-overflow-scrolling: touch; /* Smooth scrolling on iOS */
-  position: fixed; /* Prevent iOS Safari from bouncing */
-  width: 100%;
-  height: 100%;
-}
-/* Just enough to see the animation clearly */
-body {
-  margin: 0;
-  min-height: 100vh;
-  background: #050505;
-  color: #e5e7eb;
-  font-family: var(--font-body);
+
+/* The document scrolls for real. It used to be pinned with position: fixed and
+   overflow: hidden while a step machine swapped sections in and out. */
+html {
+  scroll-behavior: auto; /* Lenis owns smoothing; both at once fight each other. */
+  -webkit-text-size-adjust: 100%;
 }
 
-/* CREATIVE SVG STYLES (from CodePen, tuned a bit) */
+body {
+  margin: 0;
+  background: #050505;
+  color: #e5e7eb;
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+  overscroll-behavior-y: none;
+}
+
+/* Only hide the system cursor once the replacement is actually rendered.
+   `cursor: none` was global, so any device the custom cursor bailed on — every
+   touchscreen laptop — was left with no pointer at all. */
+html.has-custom-cursor,
+html.has-custom-cursor * {
+  cursor: none;
+}
+
+/* The site nav steps aside while a case study sheet is open. */
+html[data-sheet-open] [data-site-nav] {
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: opacity 250ms ease;
+}
+
+/* Skip link: the first thing a keyboard user meets. */
+.skip-link {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 200;
+  padding: 0.75rem 1.25rem;
+  background: #bef264;
+  color: #000;
+  font-size: 0.875rem;
+  border-radius: 0 0 0.5rem 0;
+}
+
+.skip-link:focus {
+  left: 1rem;
+  top: 1rem;
+}
+
+/* Logo stroke animation (hero wordmark). */
 .creatives-svg {
   display: block;
   width: 100%;
   height: auto;
 }
 
-/* match CodePen: scaled stroked paths */
 .creatives-svg path,
 .creatives-svg line {
-  transform: scale(1);
-  transform-origin: center;
-  transform-origin: center;
   stroke-width: 0.5px;
   stroke-linecap: round;
   stroke-linejoin: round;
   fill: none;
 }
-/* Text reveal heading animation */
-.text-reveal {
-  display: inline-flex;
-  flex-wrap: wrap;
-  overflow: hidden;
-}
 
-.text-reveal-word {
-  display: inline-block;
-  transform: translateY(120%);
-  opacity: 0;
-  transition:
-    transform 0.7s cubic-bezier(0.19, 1, 0.22, 1),
-    opacity 0.7s ease-out;
-}
-
-.text-reveal.is-active .text-reveal-word {
-  transform: translateY(0%);
-  opacity: 1;
-}
-
-/* Paragraph stagger animation */
-.paragraph-stagger {
-  position: relative;
-}
-
-.paragraph-stagger-item {
-  transform: translateY(18px);
-  opacity: 0;
-  transition:
-    transform 0.6s cubic-bezier(0.19, 1, 0.22, 1),
-    opacity 0.6s ease-out;
-}
-
-.paragraph-stagger.is-active .paragraph-stagger-item {
-  transform: translateY(0);
-  opacity: 1;
-}
-/* Vertical snap between sections */
-html,
-body {
-  scroll-snap-type: y mandatory;
-  scroll-behavior: smooth;
-}
-
-.snap-section {
-  scroll-snap-align: start;
-}
-
-/* Text reveal heading animation (for About / What we do) */
-.text-reveal {
-  display: inline-flex;
-  flex-wrap: wrap;
-  overflow: hidden;
-}
-
-.text-reveal-word {
-  display: inline-block;
-  transform: translateY(120%);
-  opacity: 0;
-  transition:
-    transform 0.7s cubic-bezier(0.19, 1, 0.22, 1),
-    opacity 0.7s ease-out;
-}
-
-.text-reveal.is-active .text-reveal-word {
-  transform: translateY(0%);
-  opacity: 1;
-}
-
-/* Single-paragraph carousel animation (About us card) */
-.single-paragraph {
-  position: absolute;
-  left: 0;
-  top: 0;
-  right: 0;
-  opacity: 0;
-  transform: translateY(16px);
-  transition:
-    opacity 0.5s ease-out,
-    transform 0.5s cubic-bezier(0.19, 1, 0.22, 1);
-}
-
-.single-paragraph.is-active {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.text-glow-strong {
-  text-shadow:
-    0 0 15px rgba(0, 0, 0, 0.2 )
-    0 0 25px rgba(0, 0, 0, 0.5);
-  }
-
-.text-glow-medium {
-  text-shadow:
-    0 0 18px rgba(0, 0, 0, 0.9),
-    0 0 22px rgba(255, 255, 255, 0.35);
-}
-
-.text-glow-soft {
-  text-shadow:
-    0 0 14px rgba(0, 0, 0, 0.85),
-    0 0 18px rgba(255, 255, 255, 0.2);
-}
-/* Hide scrollbars for elements that opt into it */
-.no-scrollbar {
-  -ms-overflow-style: none; /* IE + Edge */
-  scrollbar-width: none; /* Firefox */
-}
-
-.no-scrollbar::-webkit-scrollbar {
-  display: none; /* Chrome, Safari, Opera */
-}
-/* Custom scrollbar for dark panels */
+/* Scrollbar inside dark panels such as the case study sheet. */
 .scrollbar-contrast {
-  scrollbar-width: thin;              /* Firefox */
+  scrollbar-width: thin;
   scrollbar-color: rgba(255, 255, 255, 0.35) transparent;
 }
 
@@ -175,10 +93,17 @@ body {
 }
 
 .scrollbar-contrast::-webkit-scrollbar-thumb {
-  background: rgba(255, 255, 255, 0.675);
+  background: rgba(255, 255, 255, 0.4);
   border-radius: 999px;
 }
 
-.scrollbar-contrast::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.55);
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

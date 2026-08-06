@@ -4,8 +4,7 @@
 // re-exports, so we duplicate the values and reuse the rendering function.
 import OpengraphImage from './opengraph-image';
 
-export const runtime = 'edge';
-export const alt = 'Toad Creatives — Pasindu Upendra';
+export const alt = 'Toad Creatives — Pasindu Upendra, web developer in Ireland';
 export const size = { width: 1200, height: 630 };
 export const contentType = 'image/png';
 

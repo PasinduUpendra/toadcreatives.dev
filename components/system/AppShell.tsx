@@ -1,8 +1,7 @@
-// FILE: components/system/AppShell.tsx
 "use client";
 
 import React from "react";
-import { ScrollProgressProvider } from "./ScrollProgressProvider";
+import SmoothScroll from "./SmoothScroll";
 import CustomCursor from "../ui/CustomCursor";
 import { TubesSystem } from "../visuals/TubesSystem";
 
@@ -13,33 +12,32 @@ import WhatWeDo from "../sections/WhatWeDo";
 import Works from "../sections/Works";
 import Contact from "../sections/Contact";
 
+/**
+ * The page is an ordinary scrolling document. Every section is mounted at all
+ * times, which is what puts the copy in the server-rendered HTML — previously
+ * only the hero existed until you scrolled, so crawlers saw one sentence.
+ */
 const AppShell: React.FC = () => {
   return (
-    <ScrollProgressProvider>
+    <>
+      <SmoothScroll />
       <CustomCursor />
-      {/* Outer container controlling full-screen sections */}
-      <div className="relative w-screen h-screen bg-black text-white overflow-hidden">
 
-        {/* FIXED BACKGROUND WEBGL CANVAS */}
-        <div className="pointer-events-none fixed inset-0 z-0">
-          <TubesSystem />
-        </div>
-
-        {/* FIXED NAVIGATION */}
-        <div className="fixed top-0 inset-x-0 z-[90] pointer-events-none">
-          <NavBar />
-        </div>
-
-        {/* FOREGROUND STACKED SECTIONS */}
-        <div className="relative z-10 w-full h-full">
-          <Hero />
-          <About />
-          <WhatWeDo />
-          <Works />
-          <Contact />
-        </div>
+      {/* The WebGL field stays fixed behind everything and re-tints per section. */}
+      <div className="pointer-events-none fixed inset-0 z-0" aria-hidden="true">
+        <TubesSystem />
       </div>
-    </ScrollProgressProvider>
+
+      <NavBar />
+
+      <main id="main" className="relative z-10">
+        <Hero />
+        <About />
+        <WhatWeDo />
+        <Works />
+        <Contact />
+      </main>
+    </>
   );
 };
 

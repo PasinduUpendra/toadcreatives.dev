@@ -9,7 +9,9 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/api/'],
+        // /lab is an internal prototype gallery. It carries a noindex tag too,
+        // but crawlers that never render it should not queue it at all.
+        disallow: ['/api/', '/lab'],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,
